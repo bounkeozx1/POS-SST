@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="lo">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Self-Ordering POS System</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@300;400;600;700&family=Noto+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f13;
+    --surface: #18181f;
+    --surface2: #22222c;
+    --accent: #ff6b35;
+    --accent2: #ff9f1c;
+    --green: #2ecc71;
+    --red: #e74c3c;
+    --blue: #3498db;
+    --text: #f0f0f0;
+    --muted: #888;
+    --border: rgba(255,255,255,0.07);
+    --radius: 16px;
+    --card-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Noto Sans Lao', 'Noto Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ===== TOP NAV ===== */
+  .topbar {
+    position: fixed; top:0; left:0; right:0; z-index:100;
+    background: rgba(15,15,19,0.92);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px; height: 60px;
+  }
+
+  .topbar-logo {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 1.2rem; font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+
+  .topbar-logo .icon { font-size: 1.5rem; -webkit-text-fill-color: initial; }
+
+  .topbar-center {
+    display: flex; align-items: center; gap: 4px;
+    background: var(--surface2); border-radius: 12px; padding: 4px;
+  }
+
+  .nav-btn {
+    padding: 7px 18px; border-radius: 9px; border: none; cursor: pointer;
+    font-family: inherit; font-size: 0.85rem; font-weight: 600;
+    color: var(--muted); background: transparent;
+    transition: all 0.2s;
+  }
+  .nav-btn.active { background: var(--accent); color: white; }
+  .nav-btn:hover:not(.active) { color: var(--text); background: var(--surface); }
+
+  .topbar-right {
+    display: flex; align-items: center; gap: 12px;
+  }
+
+  .table-badge {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white; padding: 5px 14px; border-radius: 20px;
+    font-size: 0.8rem; font-weight: 700;
+  }
+
+  .cart-btn {
+    position: relative; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 12px;
+    padding: 8px 16px; cursor: pointer; color: var(--text);
+    font-size: 1.2rem; transition: all 0.2s;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .cart-btn:hover { background: var(--accent); border-color: var(--accent); }
+  .cart-count {
+    position: absolute; top: -6px; right: -6px;
+    background: var(--red); color: white;
+    width: 20px; height: 20px; border-radius: 50%;
+    font-size: 0.7rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    display: none;
+  }
+  .cart-total { font-size: 0.8rem; font-weight: 700; color: var(--accent2); }
+
+  /* ===== MAIN LAYOUT ===== */
+  .main { display: flex; padding-top: 60px; min-height: 100vh; }
+
+  /* ===== PAGE MANAGER ===== */
+  .page { display: none; width: 100%; padding: 24px; }
+  .page.active { display: block; }
+
+  /* ===== HOME / SELF-ORDER PAGE ===== */
+  .self-order-layout { display: flex; gap: 24px; max-width: 1400px; margin: 0 auto; }
+
+  /* Category sidebar */
+  .cat-sidebar {
+    width: 110px; flex-shrink: 0;
+    display: flex; flex-direction: column; gap: 8px;
+    position: sticky; top: 80px; height: fit-content;
+  }
+
+  .cat-item {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    padding: 14px 8px; border-radius: 14px;
+    background: var(--surface); border: 1px solid var(--border);
+    cursor: pointer; transition: all 0.2s; text-align: center;
+  }
+  .cat-item:hover { border-color: var(--accent); }
+  .cat-item.active { background: var(--accent); border-color: var(--accent); }
+  .cat-item .cat-icon { font-size: 1.6rem; }
+  .cat-item .cat-name { font-size: 0.7rem; color: var(--muted); }
+  .cat-item.active .cat-name { color: white; }
+
+  /* Menu grid */
+  .menu-area { flex: 1; }
+
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .section-title {
+    font-size: 1.4rem; font-weight: 700;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-title::before {
+    content: ''; display: block;
+    width: 4px; height: 22px; border-radius: 4px;
+    background: linear-gradient(to bottom, var(--accent), var(--accent2));
+  }
+
+  .search-bar {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 8px 14px;
+    color: var(--muted); font-size: 0.9rem;
+  }
+  .search-bar input {
+    background: none; border: none; outline: none;
+    color: var(--text); font-family: inherit; width: 200px;
+  }
+
+  .menu-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 16px;
+  }
+
+  .menu-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+    cursor: pointer; transition: all 0.25s;
+    position: relative;
+  }
+  .menu-card:hover { transform: translateY(-4px); border-color: var(--accent); box-shadow: 0 12px 40px rgba(255,107,53,0.2); }
+
+  .menu-img {
+    width: 100%; height: 130px; object-fit: cover;
+    background: var(--surface2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 3.5rem;
+  }
+
+  .menu-info { padding: 12px; }
+  .menu-name { font-size: 0.9rem; font-weight: 600; margin-bottom: 4px; }
+  .menu-desc { font-size: 0.72rem; color: var(--muted); margin-bottom: 10px; line-height: 1.4; }
+  .menu-footer { display: flex; align-items: center; justify-content: space-between; }
+  .menu-price { font-size: 1rem; font-weight: 700; color: var(--accent2); }
+  .menu-price span { font-size: 0.72rem; color: var(--muted); }
+
+  .add-btn {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: var(--accent); border: none; cursor: pointer;
+    color: white; font-size: 1.2rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .add-btn:hover { background: var(--accent2); transform: scale(1.1); }
+
+  .sold-out-badge {
+    position: absolute; top: 10px; right: 10px;
+    background: rgba(0,0,0,0.7); color: var(--red);
+    font-size: 0.65rem; font-weight: 700; padding: 3px 8px; border-radius: 6px;
+    border: 1px solid var(--red);
+  }
+
+  /* ===== CART PANEL ===== */
+  .cart-panel {
+    position: fixed; right: -420px; top: 60px; bottom: 0;
+    width: 400px; background: var(--surface);
+    border-left: 1px solid var(--border);
+    transition: right 0.35s cubic-bezier(.4,0,.2,1);
+    z-index: 90; display: flex; flex-direction: column;
+    box-shadow: -8px 0 40px rgba(0,0,0,0.5);
+  }
+  .cart-panel.open { right: 0; }
+
+  .cart-header {
+    padding: 20px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .cart-title { font-size: 1.1rem; font-weight: 700; }
+  .close-cart { background: var(--surface2); border: none; color: var(--muted); width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; }
+
+  .cart-items { flex:1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+
+  .cart-item {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--surface2); border-radius: 12px; padding: 12px;
+    border: 1px solid var(--border);
+  }
+  .ci-emoji { font-size: 2rem; }
+  .ci-info { flex: 1; }
+  .ci-name { font-size: 0.88rem; font-weight: 600; }
+  .ci-price { font-size: 0.8rem; color: var(--accent2); margin-top: 2px; }
+  .ci-controls { display: flex; align-items: center; gap: 8px; }
+  .ci-btn {
+    width: 26px; height: 26px; border-radius: 6px; border: none;
+    background: var(--surface); color: var(--text); cursor: pointer; font-size: 0.9rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .ci-btn:hover { background: var(--accent); }
+  .ci-qty { font-size: 0.9rem; font-weight: 700; min-width: 20px; text-align: center; }
+
+  .cart-empty { text-align: center; padding: 60px 20px; color: var(--muted); }
+  .cart-empty .empty-icon { font-size: 4rem; margin-bottom: 12px; }
+
+  .cart-footer { padding: 20px; border-top: 1px solid var(--border); }
+  .cart-summary { margin-bottom: 16px; }
+  .summary-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.88rem; color: var(--muted); }
+  .summary-row.total { font-size: 1.1rem; font-weight: 700; color: var(--text); border-top: 1px solid var(--border); padding-top: 10px; }
+  .summary-row.total .val { color: var(--accent2); }
+
+  .order-btn {
+    width: 100%; padding: 15px; border-radius: 14px; border: none;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white; font-size: 1rem; font-weight: 700; cursor: pointer;
+    font-family: inherit; transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .order-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255,107,53,0.4); }
+
+  /* ===== REPORTS PAGE ===== */
+  .stats-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px; margin-bottom: 28px;
+  }
+
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px;
+    position: relative; overflow: hidden;
+  }
+  .stat-card::before {
+    content: ''; position: absolute; right: -20px; top: -20px;
+    width: 80px; height: 80px; border-radius: 50%;
+    background: var(--accent); opacity: 0.08;
+  }
+  .stat-icon { font-size: 1.8rem; margin-bottom: 10px; }
+  .stat-label { font-size: 0.78rem; color: var(--muted); margin-bottom: 6px; }
+  .stat-value { font-size: 1.8rem; font-weight: 700; color: var(--accent2); }
+  .stat-change { font-size: 0.75rem; color: var(--green); margin-top: 4px; }
+
+  .orders-table {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+  }
+  .table-title { padding: 18px 20px; font-weight: 700; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left; padding: 12px 20px;
+    font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--border);
+  }
+  td { padding: 14px 20px; font-size: 0.88rem; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .status-badge {
+    padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600;
+  }
+  .status-done { background: rgba(46,204,113,0.15); color: var(--green); }
+  .status-pending { background: rgba(255,159,28,0.15); color: var(--accent2); }
+  .status-cancel { background: rgba(231,76,60,0.15); color: var(--red); }
+
+  /* ===== SETTINGS PAGE ===== */
+  .settings-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 1000px; }
+
+  .settings-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+  }
+  .settings-card-header {
+    padding: 18px 20px; border-bottom: 1px solid var(--border);
+    font-weight: 700; display: flex; align-items: center; gap: 8px;
+  }
+
+  .form-group { padding: 16px 20px; border-bottom: 1px solid var(--border); }
+  .form-label { font-size: 0.78rem; color: var(--muted); margin-bottom: 8px; }
+  .form-input {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 14px; color: var(--text);
+    font-family: inherit; font-size: 0.88rem; outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-input:focus { border-color: var(--accent); }
+
+  .save-btn {
+    margin: 16px 20px; padding: 10px 24px; border-radius: 10px; border: none;
+    background: var(--accent); color: white; font-weight: 700;
+    font-family: inherit; cursor: pointer; font-size: 0.88rem;
+    transition: all 0.2s;
+  }
+  .save-btn:hover { background: var(--accent2); }
+
+  /* ===== LOG PAGE ===== */
+  .log-container {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px; max-height: 600px;
+    overflow-y: auto; font-family: 'Courier New', monospace; font-size: 0.82rem;
+  }
+  .log-entry {
+    padding: 8px 12px; margin-bottom: 4px; border-radius: 8px;
+    border-left: 3px solid var(--border);
+    animation: slideIn 0.3s ease;
+  }
+  .log-entry.info { border-color: var(--blue); background: rgba(52,152,219,0.06); }
+  .log-entry.success { border-color: var(--green); background: rgba(46,204,113,0.06); }
+  .log-entry.warning { border-color: var(--accent2); background: rgba(255,159,28,0.06); }
+  .log-time { color: var(--muted); margin-right: 8px; }
+
+  @keyframes slideIn {
+    from { opacity:0; transform: translateX(-10px); }
+    to { opacity:1; transform: translateX(0); }
+  }
+
+  /* ===== ORDER SUCCESS MODAL ===== */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(8px); z-index: 200;
+    display: none; align-items: center; justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 24px; padding: 40px; text-align: center;
+    max-width: 380px; width: 90%;
+    animation: popIn 0.4s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes popIn {
+    from { opacity:0; transform: scale(0.8); }
+    to { opacity:1; transform: scale(1); }
+  }
+  .modal-icon { font-size: 4rem; margin-bottom: 16px; }
+  .modal-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 8px; }
+  .modal-sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 24px; }
+  .modal-order-num {
+    font-size: 2.5rem; font-weight: 700;
+    color: var(--accent2); margin-bottom: 24px;
+    background: var(--surface2); border-radius: 14px; padding: 16px;
+  }
+  .modal-close-btn {
+    padding: 12px 40px; border-radius: 12px; border: none;
+    background: var(--accent); color: white; font-weight: 700;
+    font-family: inherit; cursor: pointer; font-size: 0.95rem;
+  }
+
+  /* ===== TOAST ===== */
+  .toast-container {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    z-index: 300; display: flex; flex-direction: column; gap: 8px; align-items: center;
+  }
+  .toast {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 20px; font-size: 0.88rem;
+    box-shadow: var(--card-shadow); display: flex; align-items: center; gap: 8px;
+    animation: toastIn 0.3s ease;
+  }
+  @keyframes toastIn {
+    from { opacity:0; transform: translateY(10px); }
+    to { opacity:1; transform: translateY(0); }
+  }
+
+  /* ===== MAP SECTION ===== */
+  .map-placeholder {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius); height: 280px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 12px; color: var(--muted); font-size: 0.9rem;
+    position: relative; overflow: hidden;
+    margin-top: 24px;
+  }
+  .map-grid {
+    position: absolute; inset: 0;
+    background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  .map-pin { font-size: 3rem; z-index: 1; }
+  .map-label { z-index: 1; font-weight: 600; color: var(--text); }
+  .map-coord { z-index: 1; font-size: 0.78rem; color: var(--accent); font-family: monospace; }
+
+  /* ===== SCROLL BAR ===== */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 4px; }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 768px) {
+    .cat-sidebar { flex-direction: row; overflow-x: auto; width: 100%; padding-bottom: 8px; }
+    .self-order-layout { flex-direction: column; }
+    .cat-item { min-width: 80px; }
+    .settings-layout { grid-template-columns: 1fr; }
+    .topbar-center { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="topbar">
+  <div class="topbar-logo">
+    <span class="icon">🍜</span> ຮ້ານອາຫານລາວ
+  </div>
+  <div class="topbar-center">
+    <button class="nav-btn active" onclick="showPage('order')">🛒 ສັ່ງອາຫານ</button>
+    <button class="nav-btn" onclick="showPage('report')">📊 ລາຍງານ</button>
+    <button class="nav-btn" onclick="showPage('settings')">⚙️ ຕັ້ງຄ່າ</button>
+    <button class="nav-btn" onclick="showPage('log')">📋 Log</button>
+  </div>
+  <div class="topbar-right">
+    <span class="table-badge">🪑 ໂຕ 9A7F5A</span>
+    <button class="cart-btn" onclick="toggleCart()" id="cartBtn">
+      🛒 <span class="cart-total" id="cartTotal">0 ກີບ</span>
+      <span class="cart-count" id="cartCount">0</span>
+    </button>
+  </div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+
+  <!-- ===== PAGE: SELF-ORDER ===== -->
+  <div class="page active" id="page-order">
+    <div class="self-order-layout">
+
+      <!-- Category Sidebar -->
+      <div class="cat-sidebar">
+        <div class="cat-item active" onclick="filterCat('all', this)">
+          <span class="cat-icon">🍽️</span>
+          <span class="cat-name">ທັງໝົດ</span>
+        </div>
+        <div class="cat-item" onclick="filterCat('rice', this)">
+          <span class="cat-icon">🍚</span>
+          <span class="cat-name">ຂ້າວ</span>
+        </div>
+        <div class="cat-item" onclick="filterCat('noodle', this)">
+          <span class="cat-icon">🍜</span>
+          <span class="cat-name">ເຝີ/ກ໋ວຍຈັ໊ບ</span>
+        </div>
+        <div class="cat-item" onclick="filterCat('grill', this)">
+          <span class="cat-icon">🔥</span>
+          <span class="cat-name">ປີ້ງ</span>
+        </div>
+        <div class="cat-item" onclick="filterCat('drink', this)">
+          <span class="cat-icon">🥤</span>
+          <span class="cat-name">ເຄື່ອງດື່ມ</span>
+        </div>
+        <div class="cat-item" onclick="filterCat('dessert', this)">
+          <span class="cat-icon">🍮</span>
+          <span class="cat-name">ຂອງຫວານ</span>
+        </div>
+      </div>
+
+      <!-- Menu Area -->
+      <div class="menu-area">
+        <div class="section-header">
+          <div class="section-title">ເມນູອາຫານ</div>
+          <div class="search-bar">
+            🔍 <input type="text" placeholder="ຄົ້ນຫາເມນູ..." oninput="searchMenu(this.value)">
+          </div>
+        </div>
+
+        <div class="menu-grid" id="menuGrid"></div>
+
+        <!-- Map Section -->
+        <div id="page-order-map">
+          <div class="section-title" style="margin-top:30px; margin-bottom:14px;">📍 ທີ່ຕັ້ງຮ້ານ</div>
+          <div class="map-placeholder">
+            <div class="map-grid"></div>
+            <div class="map-pin">📍</div>
+            <div class="map-label">ຮ້ານອາຫານລາວ — ສາຂາຫຼັກ</div>
+            <div class="map-coord">17.9647° N, 102.6107° E · ວຽງຈັນ, ລາວ</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PAGE: REPORT ===== -->
+  <div class="page" id="page-report">
+    <div class="section-title" style="margin-bottom:24px;">📊 ລາຍງານການຂາຍ</div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">💰</div>
+        <div class="stat-label">ລາຍຮັບວັນນີ້</div>
+        <div class="stat-value" id="todayRevenue">0</div>
+        <div class="stat-change">ກີບ</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📦</div>
+        <div class="stat-label">ຄຳສັ່ງທັງໝົດ</div>
+        <div class="stat-value" id="totalOrders">0</div>
+        <div class="stat-change">ລາຍການ</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🏆</div>
+        <div class="stat-label">ເມນູຂາຍດີ</div>
+        <div class="stat-value" style="font-size:1.1rem" id="topItem">—</div>
+        <div class="stat-change">ສິນຄ້າຍອດນິຍົມ</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">👥</div>
+        <div class="stat-label">ໂຕໃຊ້ງານ</div>
+        <div class="stat-value">1</div>
+        <div class="stat-change">ຕາຕາລາງ online</div>
+      </div>
+    </div>
+
+    <div class="orders-table">
+      <div class="table-title">
+        ລາຍການສັ່ງຊື້ <span id="orderCount" style="color:var(--muted);font-size:0.85rem">0 ລາຍການ</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Order #</th>
+            <th>ໂຕ</th>
+            <th>ລາຍການ</th>
+            <th>ລວມ</th>
+            <th>ເວລາ</th>
+            <th>ສະຖານະ</th>
+          </tr>
+        </thead>
+        <tbody id="ordersTable">
+          <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:40px">ຍັງບໍ່ມີຄຳສັ່ງ</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== PAGE: SETTINGS ===== -->
+  <div class="page" id="page-settings">
+    <div class="section-title" style="margin-bottom:24px;">⚙️ ການຕັ້ງຄ່າ</div>
+    <div class="settings-layout">
+      <div class="settings-card">
+        <div class="settings-card-header">🏪 ຂໍ້ມູນຮ້ານ</div>
+        <div class="form-group">
+          <div class="form-label">ຊື່ຮ້ານ</div>
+          <input class="form-input" value="ຮ້ານອາຫານລາວ">
+        </div>
+        <div class="form-group">
+          <div class="form-label">ໂທລະສັບ</div>
+          <input class="form-input" value="020 xxxx xxxx">
+        </div>
+        <div class="form-group">
+          <div class="form-label">ທີ່ຢູ່</div>
+          <input class="form-input" value="ວຽງຈັນ, ລາວ">
+        </div>
+        <button class="save-btn" onclick="showToast('✅ ບັນທຶກຂໍ້ມູນຮ້ານສຳເລັດ')">💾 ບັນທຶກ</button>
+      </div>
+
+      <div class="settings-card">
+        <div class="settings-card-header">➕ ເພີ່ມສິນຄ້າ</div>
+        <div class="form-group">
+          <div class="form-label">ຊື່ເມນູ</div>
+          <input class="form-input" id="newItemName" placeholder="ເຊັ່ນ: ຂ້າວໜຽວ">
+        </div>
+        <div class="form-group">
+          <div class="form-label">ລາຄາ (ກີບ)</div>
+          <input class="form-input" id="newItemPrice" type="number" placeholder="15000">
+        </div>
+        <div class="form-group">
+          <div class="form-label">ໝວດໝູ່</div>
+          <select class="form-input" id="newItemCat">
+            <option value="rice">ຂ້າວ</option>
+            <option value="noodle">ເຝີ/ກ໋ວຍຈັ໊ບ</option>
+            <option value="grill">ປີ້ງ</option>
+            <option value="drink">ເຄື່ອງດື່ມ</option>
+            <option value="dessert">ຂອງຫວານ</option>
+          </select>
+        </div>
+        <button class="save-btn" onclick="addNewItem()">➕ ເພີ່ມສິນຄ້າ</button>
+      </div>
+
+      <div class="settings-card">
+        <div class="settings-card-header">👤 ການຈັດການຜູ້ໃຊ້</div>
+        <div class="form-group">
+          <div class="form-label">ຊື່ຜູ້ໃຊ້</div>
+          <input class="form-input" value="admin">
+        </div>
+        <div class="form-group">
+          <div class="form-label">ລະຫັດຜ່ານໃໝ່</div>
+          <input class="form-input" type="password" placeholder="••••••••">
+        </div>
+        <button class="save-btn" onclick="showToast('✅ ອັບເດດຂໍ້ມູນຜູ້ໃຊ້ສຳເລັດ')">💾 ອັບເດດ</button>
+      </div>
+
+      <div class="settings-card">
+        <div class="settings-card-header">🗃️ ຈັດການຖານຂໍ້ມູນ</div>
+        <div class="form-group" style="padding-top:20px;">
+          <button class="save-btn" style="margin:0;background:var(--blue)" onclick="showToast('💾 ສຳຮອງຂໍ້ມູນສຳເລັດ')">💾 ສຳຮອງຂໍ້ມູນ</button>
+        </div>
+        <div class="form-group">
+          <button class="save-btn" style="margin:0;background:var(--red)" onclick="if(confirm('ລຶບຂໍ້ມູນທັງໝົດ?')) showToast('🗑️ ລຶບຂໍ້ມູນສຳເລັດ')">🗑️ ລຶບຂໍ້ມູນ</button>
+        </div>
+        <div class="form-group">
+          <div class="form-label">ເວີຊັ່ນລະບົບ</div>
+          <div style="color:var(--accent2);font-size:0.88rem;margin-top:4px;">v1.0.0 — Self-Ordering POS</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PAGE: LOG ===== -->
+  <div class="page" id="page-log">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div class="section-title">📋 ບັນທຶກການໃຊ້ງານ</div>
+      <button class="save-btn" style="margin:0" onclick="clearLogs()">🗑️ ລ້າງ Log</button>
+    </div>
+    <div class="log-container" id="logContainer">
+      <!-- logs go here -->
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== CART PANEL ===== -->
+<div class="cart-panel" id="cartPanel">
+  <div class="cart-header">
+    <div class="cart-title">🛒 ລາຍການສັ່ງ</div>
+    <button class="close-cart" onclick="toggleCart()">✕</button>
+  </div>
+  <div class="cart-items" id="cartItems">
+    <div class="cart-empty">
+      <div class="empty-icon">🛒</div>
+      ຍັງບໍ່ມີລາຍການ<br>ກະລຸນາເລືອກອາຫານ
+    </div>
+  </div>
+  <div class="cart-footer">
+    <div class="cart-summary">
+      <div class="summary-row"><span>ຈຳນວນ</span><span id="sumQty">0 ລາຍການ</span></div>
+      <div class="summary-row"><span>ລາຄາ</span><span id="sumSubtotal">0 ກີບ</span></div>
+      <div class="summary-row"><span>VAT (7%)</span><span id="sumVat">0 ກີບ</span></div>
+      <div class="summary-row total"><span>ລວມທັງໝົດ</span><span class="val" id="sumTotal">0 ກີບ</span></div>
+    </div>
+    <button class="order-btn" onclick="placeOrder()">✅ ຢືນຢັນການສັ່ງ</button>
+  </div>
+</div>
+
+<!-- ===== ORDER SUCCESS MODAL ===== -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-icon">🎉</div>
+    <div class="modal-title">ສັ່ງສຳເລັດ!</div>
+    <div class="modal-sub">ທ່ານໄດ້ສັ່ງອາຫານສຳເລັດ ກະລຸນາລໍຖ້າ...</div>
+    <div class="modal-order-num" id="modalOrderNum">#0001</div>
+    <button class="modal-close-btn" onclick="closeModal()">ຕົກລົງ</button>
+  </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ===== DATA =====
+let menuItems = [
+  { id:1, name:'ຂ້າວໜຽວ', desc:'ຂ້າວໜຽວຫຸງສຸກ ລ້ຽນ', price:5000, cat:'rice', emoji:'🍚', soldOut:false },
+  { id:2, name:'ຂ້າວຜັດ', desc:'ຜັດໄຂ່ ຜັກ ຊີຟູດ', price:35000, cat:'rice', emoji:'🍳', soldOut:false },
+  { id:3, name:'ຂ້າວໝູ', desc:'ຂ້າວໝູແດງ ຊອດ', price:30000, cat:'rice', emoji:'🥩', soldOut:false },
+  { id:4, name:'ເຝີໄກ່', desc:'ນ້ຳສຸບໄກ່ ເສັ້ນ', price:25000, cat:'noodle', emoji:'🍜', soldOut:false },
+  { id:5, name:'ກ໋ວຍຈັ໊ບ', desc:'ເສັ້ນໃຫຍ່ ໝູ ໄຂ່ຕ້ົ', price:30000, cat:'noodle', emoji:'🍲', soldOut:false },
+  { id:6, name:'ລາບໝູ', desc:'ລາບໝູດິບ / ສຸກ', price:40000, cat:'rice', emoji:'🥗', soldOut:false },
+  { id:7, name:'ຕົ້ມຍຳ', desc:'ຕົ້ມຍຳກຸ້ງ ເຜັດຮ້ອນ', price:50000, cat:'rice', emoji:'🦐', soldOut:false },
+  { id:8, name:'ໄກ່ຍ່າງ', desc:'ໄກ່ຍ່າງຟືນ ຊອດໃຫ້', price:45000, cat:'grill', emoji:'🍗', soldOut:false },
+  { id:9, name:'ປາຫນຶ່ງ', desc:'ປາຕົ້ມ ເຄື່ອງຈ້ຳ', price:60000, cat:'grill', emoji:'🐟', soldOut:false },
+  { id:10, name:'ໝູກົ້ງ', desc:'ໝູສາມຊັ້ນປີ້ງ', price:55000, cat:'grill', emoji:'🥓', soldOut:true },
+  { id:11, name:'ນ້ຳດື່ມ', desc:'ນ້ຳເຢັນ 600ml', price:5000, cat:'drink', emoji:'💧', soldOut:false },
+  { id:12, name:'ນ້ຳໝາກໄມ້', desc:'ນ້ຳຕ່ອງ ເຢັນ', price:15000, cat:'drink', emoji:'🧃', soldOut:false },
+  { id:13, name:'ເບຍລາວ', desc:'ເບຍຂວດ 640ml', price:20000, cat:'drink', emoji:'🍺', soldOut:false },
+  { id:14, name:'ຂ້າວໜົມ', desc:'ຂ້າວໜົມຫໍ່ຢ່ອຍ', price:8000, cat:'dessert', emoji:'🍡', soldOut:false },
+  { id:15, name:'ຂ້າວຕ້ມ', desc:'ຂ້າວຕ້ມ ໝາກໂກ', price:12000, cat:'dessert', emoji:'🧆', soldOut:false },
+];
+
+let cart = [];
+let orderHistory = [];
+let orderNum = 1;
+let currentCat = 'all';
+let searchQuery = '';
+
+// ===== INIT =====
+function init() {
+  renderMenu();
+  addLog('ຜູ້ໃຊ້ເຂົ້າໃຊ້ລະບົບ POS', 'info');
+  addLog('ໂຕ 9A7F5A ເຊື່ອມຕໍ່ສຳເລັດ', 'success');
+  addLog('ໂຫລດເມນູ ' + menuItems.length + ' ລາຍການ', 'info');
+}
+
+// ===== PAGES =====
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  event.target.classList.add('active');
+  if (page === 'report') updateReport();
+  addLog('ເຂົ້າໜ້າ: ' + page, 'info');
+}
+
+// ===== MENU =====
+function renderMenu() {
+  const grid = document.getElementById('menuGrid');
+  const filtered = menuItems.filter(item => {
+    const matchCat = currentCat === 'all' || item.cat === currentCat;
+    const matchSearch = item.name.toLowerCase().includes(searchQuery) || item.desc.toLowerCase().includes(searchQuery);
+    return matchCat && matchSearch;
+  });
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div style="color:var(--muted);grid-column:1/-1;text-align:center;padding:40px">ບໍ່ພົບເມນູ</div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(item => `
+    <div class="menu-card" onclick="${item.soldOut ? '' : 'addToCart(' + item.id + ')'}">
+      ${item.soldOut ? '<div class="sold-out-badge">ໝົດ</div>' : ''}
+      <div class="menu-img">${item.emoji}</div>
+      <div class="menu-info">
+        <div class="menu-name">${item.name}</div>
+        <div class="menu-desc">${item.desc}</div>
+        <div class="menu-footer">
+          <div class="menu-price">${fmt(item.price)} <span>ກີບ</span></div>
+          ${item.soldOut ? '<span style="color:var(--red);font-size:0.75rem">ໝົດ</span>' : '<button class="add-btn">+</button>'}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterCat(cat, el) {
+  currentCat = cat;
+  document.querySelectorAll('.cat-item').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderMenu();
+}
+
+function searchMenu(val) {
+  searchQuery = val.toLowerCase();
+  renderMenu();
+}
+
+// ===== CART =====
+function addToCart(id) {
+  const item = menuItems.find(m => m.id === id);
+  const existing = cart.find(c => c.id === id);
+  if (existing) { existing.qty++; }
+  else { cart.push({ ...item, qty: 1 }); }
+  updateCartUI();
+  showToast('✅ ເພີ່ມ ' + item.name + ' ລົງລາຍການ');
+  addLog('ເພີ່ມ: ' + item.name + ' x1', 'success');
+}
+
+function changeQty(id, delta) {
+  const idx = cart.findIndex(c => c.id === id);
+  if (idx === -1) return;
+  cart[idx].qty += delta;
+  if (cart[idx].qty <= 0) cart.splice(idx, 1);
+  updateCartUI();
+}
+
+function updateCartUI() {
+  const total = cart.reduce((s, c) => s + c.price * c.qty, 0);
+  const qty = cart.reduce((s, c) => s + c.qty, 0);
+  const vat = Math.round(total * 0.07);
+  const grandTotal = total + vat;
+
+  document.getElementById('cartTotal').textContent = fmt(grandTotal) + ' ກີບ';
+  const cnt = document.getElementById('cartCount');
+  cnt.style.display = qty > 0 ? 'flex' : 'none';
+  cnt.textContent = qty;
+
+  document.getElementById('sumQty').textContent = qty + ' ລາຍການ';
+  document.getElementById('sumSubtotal').textContent = fmt(total) + ' ກີບ';
+  document.getElementById('sumVat').textContent = fmt(vat) + ' ກີບ';
+  document.getElementById('sumTotal').textContent = fmt(grandTotal) + ' ກີບ';
+
+  const ci = document.getElementById('cartItems');
+  if (cart.length === 0) {
+    ci.innerHTML = `<div class="cart-empty"><div class="empty-icon">🛒</div>ຍັງບໍ່ມີລາຍການ<br>ກະລຸນາເລືອກອາຫານ</div>`;
+    return;
+  }
+  ci.innerHTML = cart.map(c => `
+    <div class="cart-item">
+      <div class="ci-emoji">${c.emoji}</div>
+      <div class="ci-info">
+        <div class="ci-name">${c.name}</div>
+        <div class="ci-price">${fmt(c.price * c.qty)} ກີບ</div>
+      </div>
+      <div class="ci-controls">
+        <button class="ci-btn" onclick="changeQty(${c.id},-1)">−</button>
+        <span class="ci-qty">${c.qty}</span>
+        <button class="ci-btn" onclick="changeQty(${c.id},1)">+</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleCart() {
+  document.getElementById('cartPanel').classList.toggle('open');
+}
+
+// ===== ORDER =====
+function placeOrder() {
+  if (cart.length === 0) { showToast('⚠️ ກາລຸນາເລືອກອາຫານກ່ອນ'); return; }
+  const total = cart.reduce((s, c) => s + c.price * c.qty, 0);
+  const vat = Math.round(total * 0.07);
+  const grandTotal = total + vat;
+  const num = String(orderNum).padStart(4, '0');
+
+  orderHistory.push({
+    num, table:'9A7F5A',
+    items: cart.map(c => c.name + ' x' + c.qty).join(', '),
+    total: grandTotal,
+    time: new Date().toLocaleTimeString(),
+    status: 'pending'
+  });
+
+  addLog('ສັ່ງ Order #' + num + ' ລວມ ' + fmt(grandTotal) + ' ກີບ', 'success');
+
+  // mark pending → done after 3s
+  setTimeout(() => {
+    const o = orderHistory.find(o => o.num === num);
+    if (o) { o.status = 'done'; updateReport(); addLog('Order #' + num + ' ສຳເລັດ', 'success'); }
+  }, 3000);
+
+  orderNum++;
+  document.getElementById('modalOrderNum').textContent = '#' + num;
+  document.getElementById('modal').classList.add('show');
+  cart = [];
+  updateCartUI();
+  document.getElementById('cartPanel').classList.remove('open');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('show');
+}
+
+// ===== REPORT =====
+function updateReport() {
+  const total = orderHistory.reduce((s, o) => s + o.total, 0);
+  document.getElementById('todayRevenue').textContent = fmt(total);
+  document.getElementById('totalOrders').textContent = orderHistory.length;
+  document.getElementById('orderCount').textContent = orderHistory.length + ' ລາຍການ';
+
+  // Top item
+  const freq = {};
+  orderHistory.forEach(o => { o.items.split(', ').forEach(i => { const n = i.split(' x')[0]; freq[n] = (freq[n]||0)+1; }); });
+  const top = Object.entries(freq).sort((a,b) => b[1]-a[1])[0];
+  document.getElementById('topItem').textContent = top ? top[0] : '—';
+
+  const tbody = document.getElementById('ordersTable');
+  if (orderHistory.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:40px">ຍັງບໍ່ມີຄຳສັ່ງ</td></tr>';
+    return;
+  }
+  tbody.innerHTML = [...orderHistory].reverse().map(o => `
+    <tr>
+      <td><b>#${o.num}</b></td>
+      <td><span style="color:var(--accent2)">${o.table}</span></td>
+      <td style="color:var(--muted);font-size:0.8rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.items}</td>
+      <td><b>${fmt(o.total)}</b> ກີບ</td>
+      <td style="color:var(--muted)">${o.time}</td>
+      <td><span class="status-badge ${o.status === 'done' ? 'status-done' : o.status === 'cancel' ? 'status-cancel' : 'status-pending'}">
+        ${o.status === 'done' ? '✅ ສຳເລັດ' : o.status === 'cancel' ? '❌ ຍົກເລີກ' : '⏳ ລໍຖ້າ'}
+      </span></td>
+    </tr>
+  `).join('');
+}
+
+// ===== SETTINGS: ADD ITEM =====
+function addNewItem() {
+  const name = document.getElementById('newItemName').value.trim();
+  const price = parseInt(document.getElementById('newItemPrice').value);
+  const cat = document.getElementById('newItemCat').value;
+  if (!name || isNaN(price)) { showToast('⚠️ ກາລຸນາໃສ່ຂໍ້ມູນໃຫ້ຄົບ'); return; }
+  const emojis = { rice:'🍽️', noodle:'🍜', grill:'🔥', drink:'🥤', dessert:'🍮' };
+  menuItems.push({ id: Date.now(), name, desc: 'ເມນູໃໝ່', price, cat, emoji: emojis[cat], soldOut: false });
+  document.getElementById('newItemName').value = '';
+  document.getElementById('newItemPrice').value = '';
+  showToast('✅ ເພີ່ມ ' + name + ' ສຳເລັດ');
+  addLog('ເພີ່ມສິນຄ້າໃໝ່: ' + name + ' (' + fmt(price) + ' ກີບ)', 'success');
+}
+
+// ===== LOG =====
+const logEl = document.getElementById('logContainer');
+function addLog(msg, type = 'info') {
+  const time = new Date().toLocaleTimeString();
+  const div = document.createElement('div');
+  div.className = 'log-entry ' + type;
+  div.innerHTML = `<span class="log-time">[${time}]</span>${msg}`;
+  logEl.insertBefore(div, logEl.firstChild);
+}
+function clearLogs() {
+  logEl.innerHTML = '';
+  showToast('🗑️ ລ້າງ Log ສຳເລັດ');
+}
+
+// ===== TOAST =====
+function showToast(msg) {
+  const tc = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  tc.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+
+// ===== UTILS =====
+function fmt(n) {
+  return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+// ===== START =====
+init();
+</script>
+</body>
+</html>
