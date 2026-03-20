@@ -2,60 +2,52 @@
 <html lang="lo">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#0f0f13">
-  <title>ຮ້ານອາຫານລາວ · Self-Order</title>
+  <title>ຮ້ານອາຫານລາວ · ສັ່ງອາຫານ</title>
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@300;400;600;700&family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
-  <!-- ========== TOP HEADER ========== -->
+  <!-- TOP HEADER — store info only, no settings/log buttons -->
   <header class="top-header" id="topHeader">
     <div class="header-inner">
       <div class="header-left">
         <div class="store-info">
           <span class="store-logo">🍜</span>
           <div>
-            <div class="store-name">ຮ້ານອາຫານລາວ</div>
+            <div class="store-name" id="headerStoreName">ຮ້ານອາຫານລາວ</div>
             <div class="store-table">🪑 ໂຕ <span id="tableCode">9A7F5A</span></div>
           </div>
         </div>
       </div>
       <div class="header-right">
-        <button class="header-icon-btn" onclick="showPage('log')" title="Log">
-          <span>📋</span>
-          <span class="notif-dot" id="logDot"></span>
-        </button>
-        <button class="header-icon-btn" onclick="showPage('settings')" title="ຕັ້ງຄ່າ">
-          <span>⚙️</span>
-        </button>
+        <div class="order-status-pill" id="orderStatusPill" style="display:none">
+          <span class="pulse-dot"></span>
+          <span id="orderStatusText">ກຳລັງປຸງ...</span>
+        </div>
       </div>
     </div>
   </header>
 
-  <!-- ========== MAIN CONTENT ========== -->
   <main class="main-content" id="mainContent">
 
-    <!-- ===== PAGE: ORDER ===== -->
+    <!-- PAGE: ORDER -->
     <section class="page active" id="page-order">
-
-      <!-- Category Filter Pills -->
       <div class="cat-scroll-wrap">
         <div class="cat-scroll" id="catScroll">
-          <button class="cat-pill active" data-cat="all" onclick="filterCat('all', this)">🍽️ ທັງໝົດ</button>
-          <button class="cat-pill" data-cat="rice" onclick="filterCat('rice', this)">🍚 ຂ້າວ</button>
-          <button class="cat-pill" data-cat="noodle" onclick="filterCat('noodle', this)">🍜 ເຝີ/ກ໋ວຍ</button>
-          <button class="cat-pill" data-cat="grill" onclick="filterCat('grill', this)">🔥 ປີ້ງ</button>
-          <button class="cat-pill" data-cat="drink" onclick="filterCat('drink', this)">🥤 ດື່ມ</button>
-          <button class="cat-pill" data-cat="dessert" onclick="filterCat('dessert', this)">🍮 ຂອງຫວານ</button>
+          <button class="cat-pill active" data-cat="all"     onclick="filterCat('all',this)">🍽️ ທັງໝົດ</button>
+          <button class="cat-pill" data-cat="rice"    onclick="filterCat('rice',this)">🍚 ຂ້າວ</button>
+          <button class="cat-pill" data-cat="noodle"  onclick="filterCat('noodle',this)">🍜 ເຝີ/ກ໋ວຍ</button>
+          <button class="cat-pill" data-cat="grill"   onclick="filterCat('grill',this)">🔥 ປີ້ງ</button>
+          <button class="cat-pill" data-cat="drink"   onclick="filterCat('drink',this)">🥤 ດື່ມ</button>
+          <button class="cat-pill" data-cat="dessert" onclick="filterCat('dessert',this)">🍮 ຂອງຫວານ</button>
         </div>
       </div>
-
-      <!-- Search Bar -->
       <div class="search-wrap">
         <div class="search-bar">
           <span class="search-icon">🔍</span>
@@ -63,172 +55,78 @@
           <button class="search-clear" id="searchClear" onclick="clearSearch()" style="display:none">✕</button>
         </div>
       </div>
-
-      <!-- Menu Section Label -->
       <div class="section-label" id="sectionLabel">ທັງໝົດ</div>
-
-      <!-- Menu Grid -->
       <div class="menu-grid" id="menuGrid"></div>
-
-      <!-- Map placeholder -->
       <div class="map-section">
         <div class="section-label">📍 ທີ່ຕັ້ງຮ້ານ</div>
         <div class="map-card">
           <div class="map-grid-bg"></div>
           <div class="map-content">
             <div class="map-pin-anim">📍</div>
-            <div class="map-store-name">ຮ້ານອາຫານລາວ — ສາຂາຫຼັກ</div>
+            <div class="map-store-name" id="mapStoreName">ຮ້ານອາຫານລາວ — ສາຂາຫຼັກ</div>
             <div class="map-coords">17.9647° N · 102.6107° E · ວຽງຈັນ</div>
           </div>
         </div>
       </div>
-
       <div class="bottom-spacer"></div>
     </section>
 
-    <!-- ===== PAGE: REPORT ===== -->
-    <section class="page" id="page-report">
-      <div class="page-header-title">📊 ລາຍງານການຂາຍ</div>
+    <!-- PAGE: MY ORDERS (track) -->
+    <section class="page" id="page-track">
+      <div class="page-header-title">📦 ອໍ້ເດີຂ້ອຍ</div>
 
-      <div class="stat-row">
-        <div class="stat-card accent">
-          <div class="stat-icon">💰</div>
-          <div class="stat-val" id="todayRevenue">0</div>
-          <div class="stat-lbl">ລາຍຮັບ (ກີບ)</div>
+      <div class="track-summary">
+        <div class="track-badge">
+          <span class="tb-dot tb-pending"></span>
+          <span class="tb-num" id="tPendingNum">0</span>
+          <span class="tb-lbl">ລໍຖ້າ</span>
         </div>
-        <div class="stat-card">
-          <div class="stat-icon">📦</div>
-          <div class="stat-val" id="totalOrders">0</div>
-          <div class="stat-lbl">ຄຳສັ່ງ</div>
+        <div class="track-badge">
+          <span class="tb-dot tb-cooking"></span>
+          <span class="tb-num" id="tCookingNum">0</span>
+          <span class="tb-lbl">ກຳລັງປຸງ</span>
         </div>
-      </div>
-      <div class="stat-row">
-        <div class="stat-card">
-          <div class="stat-icon">🏆</div>
-          <div class="stat-val sm" id="topItem">—</div>
-          <div class="stat-lbl">ເມນູຂາຍດີ</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon">🪑</div>
-          <div class="stat-val">1</div>
-          <div class="stat-lbl">ໂຕ Online</div>
+        <div class="track-badge">
+          <span class="tb-dot tb-done"></span>
+          <span class="tb-num" id="tDoneNum">0</span>
+          <span class="tb-lbl">ສຳເລັດ</span>
         </div>
       </div>
 
-      <div class="section-label">ລາຍການສັ່ງ</div>
-      <div class="orders-list" id="ordersList">
+      <div class="track-orders" id="trackOrders">
         <div class="empty-state">
-          <div class="empty-icon">📭</div>
-          <div>ຍັງບໍ່ມີລາຍການ</div>
+          <div class="empty-icon">🍽️</div>
+          <div>ຍັງບໍ່ມີອໍ້ເດີ</div>
+          <div style="font-size:0.8rem;color:var(--muted);margin-top:6px">ກົດ "ສັ່ງ" ເພື່ອເລືອກອາຫານ</div>
         </div>
       </div>
-      <div class="bottom-spacer"></div>
-    </section>
 
-    <!-- ===== PAGE: SETTINGS ===== -->
-    <section class="page" id="page-settings">
-      <div class="page-header-title">⚙️ ການຕັ້ງຄ່າ</div>
-
-      <!-- Store Info -->
-      <div class="settings-group">
-        <div class="settings-group-title">🏪 ຂໍ້ມູນຮ້ານ</div>
-        <div class="settings-row">
-          <label>ຊື່ຮ້ານ</label>
-          <input class="settings-input" value="ຮ້ານອາຫານລາວ">
+      <div class="session-total" id="sessionTotal" style="display:none">
+        <div class="st-row">
+          <span>ລວມທັງໝົດທີ່ສັ່ງໃນໂຕນີ້</span>
+          <span class="st-val" id="stVal">0 ກີບ</span>
         </div>
-        <div class="settings-row">
-          <label>ໂທລະສັບ</label>
-          <input class="settings-input" value="020 xxxx xxxx" type="tel">
-        </div>
-        <div class="settings-row">
-          <label>ທີ່ຢູ່</label>
-          <input class="settings-input" value="ວຽງຈັນ, ລາວ">
-        </div>
-        <button class="settings-btn" onclick="showToast('✅ ບັນທຶກຂໍ້ມູນຮ້ານສຳເລັດ')">💾 ບັນທຶກ</button>
       </div>
 
-      <!-- Add Item -->
-      <div class="settings-group">
-        <div class="settings-group-title">➕ ເພີ່ມສິນຄ້າ</div>
-        <div class="settings-row">
-          <label>ຊື່ເມນູ</label>
-          <input class="settings-input" id="newName" placeholder="ເຊັ່ນ: ຂ້າວໜຽວ">
-        </div>
-        <div class="settings-row">
-          <label>ລາຄາ (ກີບ)</label>
-          <input class="settings-input" id="newPrice" type="number" inputmode="numeric" placeholder="25000">
-        </div>
-        <div class="settings-row">
-          <label>ໝວດໝູ່</label>
-          <select class="settings-input" id="newCat">
-            <option value="rice">🍚 ຂ້າວ</option>
-            <option value="noodle">🍜 ເຝີ/ກ໋ວຍ</option>
-            <option value="grill">🔥 ປີ້ງ</option>
-            <option value="drink">🥤 ດື່ມ</option>
-            <option value="dessert">🍮 ຂອງຫວານ</option>
-          </select>
-        </div>
-        <button class="settings-btn green" onclick="addNewItem()">➕ ເພີ່ມ</button>
-      </div>
-
-      <!-- User -->
-      <div class="settings-group">
-        <div class="settings-group-title">👤 ຜູ້ໃຊ້</div>
-        <div class="settings-row">
-          <label>Username</label>
-          <input class="settings-input" value="admin">
-        </div>
-        <div class="settings-row">
-          <label>Password</label>
-          <input class="settings-input" type="password" placeholder="••••••••">
-        </div>
-        <button class="settings-btn" onclick="showToast('✅ ອັບເດດສຳເລັດ')">💾 ອັບເດດ</button>
-      </div>
-
-      <!-- DB -->
-      <div class="settings-group">
-        <div class="settings-group-title">🗃️ ຈັດການຂໍ້ມູນ</div>
-        <button class="settings-btn blue" onclick="showToast('💾 ສຳຮອງຂໍ້ມູນສຳເລັດ')">💾 ສຳຮອງຂໍ້ມູນ</button>
-        <button class="settings-btn red" style="margin-top:10px" onclick="if(confirm('ລຶບຂໍ້ມູນທັງໝົດ?')) showToast('🗑️ ລຶບແລ້ວ')">🗑️ ລຶບຂໍ້ມູລ</button>
-        <div class="version-tag">v1.0.0 · Self-Ordering POS · Mobile First</div>
-      </div>
-
-      <div class="bottom-spacer"></div>
-    </section>
-
-    <!-- ===== PAGE: LOG ===== -->
-    <section class="page" id="page-log">
-      <div class="page-header-row">
-        <div class="page-header-title">📋 Log ການໃຊ້ງານ</div>
-        <button class="mini-btn" onclick="clearLogs()">🗑️ ລ້າງ</button>
-      </div>
-      <div class="log-box" id="logBox"></div>
       <div class="bottom-spacer"></div>
     </section>
 
   </main>
 
-  <!-- ========== BOTTOM NAVIGATION ========== -->
-  <nav class="bottom-nav">
+  <!-- BOTTOM NAV — 2 tabs only -->
+  <nav class="bottom-nav bottom-nav-2col">
     <button class="nav-item active" id="nav-order" onclick="showPage('order')">
       <span class="nav-icon">🛒</span>
       <span class="nav-label">ສັ່ງ</span>
     </button>
-    <button class="nav-item" id="nav-report" onclick="showPage('report')">
-      <span class="nav-icon">📊</span>
-      <span class="nav-label">ລາຍງານ</span>
-    </button>
-    <button class="nav-item" id="nav-settings" onclick="showPage('settings')">
-      <span class="nav-icon">⚙️</span>
-      <span class="nav-label">ຕັ້ງຄ່າ</span>
-    </button>
-    <button class="nav-item" id="nav-log" onclick="showPage('log')">
-      <span class="nav-icon">📋</span>
-      <span class="nav-label">Log</span>
+    <button class="nav-item" id="nav-track" onclick="showPage('track')">
+      <span class="nav-icon">📦</span>
+      <span class="nav-label">ອໍ້ເດີຂ້ອຍ</span>
+      <span class="nav-badge" id="navPendingBadge" style="display:none"></span>
     </button>
   </nav>
 
-  <!-- ========== STICKY CART BAR (visible when cart has items) ========== -->
+  <!-- Cart bar -->
   <div class="cart-bar" id="cartBar" style="display:none" onclick="openCart()">
     <div class="cart-bar-left">
       <span class="cart-bar-qty" id="cartBarQty">0</span>
@@ -238,7 +136,7 @@
     <div class="cart-bar-right" id="cartBarTotal">0 ກີບ</div>
   </div>
 
-  <!-- ========== CART BOTTOM SHEET ========== -->
+  <!-- Cart sheet -->
   <div class="sheet-overlay" id="sheetOverlay" onclick="closeCart()"></div>
   <div class="bottom-sheet" id="bottomSheet">
     <div class="sheet-handle"></div>
@@ -246,32 +144,19 @@
       <div class="sheet-title">🛒 ລາຍການສັ່ງ</div>
       <button class="sheet-close" onclick="closeCart()">✕</button>
     </div>
-    <div class="sheet-body" id="sheetBody">
-      <!-- Cart items go here -->
-    </div>
+    <div class="sheet-body" id="sheetBody"></div>
     <div class="sheet-footer">
       <div class="sheet-summary">
-        <div class="summary-row">
-          <span>ລາຄາ</span>
-          <span id="sumSub">0 ກີບ</span>
-        </div>
-        <div class="summary-row">
-          <span>VAT 7%</span>
-          <span id="sumVat">0 ກີບ</span>
-        </div>
-        <div class="summary-row total">
-          <span>ລວມທັງໝົດ</span>
-          <span id="sumTotal">0 ກີບ</span>
-        </div>
+        <div class="summary-row"><span>ລາຄາ</span><span id="sumSub">0 ກີບ</span></div>
+        <div class="summary-row"><span>VAT 7%</span><span id="sumVat">0 ກີບ</span></div>
+        <div class="summary-row total"><span>ລວມທັງໝົດ</span><span id="sumTotal">0 ກີບ</span></div>
       </div>
-      <button class="confirm-btn" onclick="placeOrder()">
-        ✅ &nbsp;ຢືນຢັນການສັ່ງ
-      </button>
+      <button class="confirm-btn" onclick="placeOrder()">✅ &nbsp;ຢືນຢັນການສັ່ງ</button>
       <button class="clear-btn" onclick="clearCart()">ລຶບທັງໝົດ</button>
     </div>
   </div>
 
-  <!-- ========== ORDER SUCCESS MODAL ========== -->
+  <!-- Success modal -->
   <div class="modal-overlay" id="modal">
     <div class="modal-card">
       <div class="modal-anim">🎉</div>
@@ -279,13 +164,12 @@
       <div class="modal-sub">ກາລຸນາລໍຖ້າ ທາງຮ້ານກຳລັງຈັດອາຫານ</div>
       <div class="modal-num" id="modalNum">#0001</div>
       <div class="modal-table">ໂຕ: <b id="modalTable">9A7F5A</b></div>
-      <button class="confirm-btn" onclick="closeModal()">ຕົກລົງ</button>
+      <button class="confirm-btn" onclick="closeModal()">ຕິດຕາມອໍ້ເດີ →</button>
     </div>
   </div>
 
-  <!-- ========== TOAST ========== -->
   <div class="toast-wrap" id="toastWrap"></div>
-
+  <script src="db.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

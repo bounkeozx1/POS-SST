@@ -1,0 +1,8 @@
+pos/
+├── db.js            ← ✨ ใหม่: shared data layer
+├── index.html       ← โหลด db.js + script.js
+├── style.css
+├── script.js        ← ✨ อัปเดต: ใช้ POS_DB
+├── admin.html       ← โหลด db.js + admin-script.js
+├── admin-style.css
+└── admin-script.js  ← ✨ อัปเดต: ใช้ POS_DB

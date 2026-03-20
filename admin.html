@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#0c0c10">
+  <title>POS-SST · Admin Dashboard</title>
+  <link rel="stylesheet" href="admin-style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- ════════════════════════════════
+       LOGIN SCREEN
+  ════════════════════════════════ -->
+  <div class="login-screen" id="loginScreen">
+    <div class="login-bg">
+      <div class="login-orb login-orb1"></div>
+      <div class="login-orb login-orb2"></div>
+    </div>
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="login-logo-icon">⚡</div>
+        <div>
+          <div class="login-logo-title">POS-SST</div>
+          <div class="login-logo-sub">Admin Dashboard</div>
+        </div>
+      </div>
+      <div class="login-form">
+        <div class="lf-group">
+          <label>Username</label>
+          <input type="text" id="loginUser" value="admin" placeholder="admin" autocomplete="username">
+        </div>
+        <div class="lf-group">
+          <label>Password</label>
+          <div class="pw-wrap">
+            <input type="password" id="loginPass" value="1234" placeholder="••••••••" autocomplete="current-password">
+            <button class="pw-toggle" onclick="togglePw()">👁</button>
+          </div>
+        </div>
+        <div class="login-error" id="loginError"></div>
+        <button class="login-btn" onclick="doLogin()">เข้าสู่ระบบ</button>
+      </div>
+      <div class="login-hint">admin / 1234</div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════
+       APP SHELL
+  ════════════════════════════════ -->
+  <div class="app-shell" id="appShell" style="display:none">
+
+    <!-- ── SIDEBAR (Desktop) ── -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sb-header">
+        <div class="sb-logo">
+          <span class="sb-logo-icon">⚡</span>
+          <div>
+            <div class="sb-title">POS-SST</div>
+            <div class="sb-sub">Admin Panel</div>
+          </div>
+        </div>
+        <button class="sb-collapse" id="sbCollapse" onclick="toggleSidebar()" title="ย่อ/ขยาย">‹</button>
+      </div>
+
+      <nav class="sb-nav">
+        <div class="sb-section-label">เมนูหลัก</div>
+        <button class="sb-item active" data-page="dashboard" onclick="navTo('dashboard', this)">
+          <span class="sb-icon">📊</span><span class="sb-label">Dashboard</span>
+        </button>
+        <button class="sb-item" data-page="orders" onclick="navTo('orders', this)">
+          <span class="sb-icon">📦</span><span class="sb-label">คำสั่งซื้อ</span>
+          <span class="sb-badge" id="sbBadgeOrders">0</span>
+        </button>
+        <button class="sb-item" data-page="products" onclick="navTo('products', this)">
+          <span class="sb-icon">🍽️</span><span class="sb-label">สินค้า / เมนู</span>
+        </button>
+        <button class="sb-item" data-page="inventory" onclick="navTo('inventory', this)">
+          <span class="sb-icon">📋</span><span class="sb-label">สต็อกสินค้า</span>
+        </button>
+        <div class="sb-section-label">ระบบ</div>
+        <button class="sb-item" data-page="reports" onclick="navTo('reports', this)">
+          <span class="sb-icon">📈</span><span class="sb-label">รายงาน</span>
+        </button>
+        <button class="sb-item" data-page="users" onclick="navTo('users', this)">
+          <span class="sb-icon">👥</span><span class="sb-label">ผู้ใช้งาน</span>
+        </button>
+        <button class="sb-item" data-page="settings" onclick="navTo('settings', this)">
+          <span class="sb-icon">⚙️</span><span class="sb-label">ตั้งค่า</span>
+        </button>
+      </nav>
+
+      <div class="sb-footer">
+        <div class="sb-user">
+          <div class="sb-avatar" id="sbAvatar">A</div>
+          <div class="sb-user-info">
+            <div class="sb-user-name" id="sbUserName">Admin</div>
+            <div class="sb-user-role">Super Admin</div>
+          </div>
+        </div>
+        <button class="sb-logout" onclick="doLogout()" title="ออกจากระบบ">⏻</button>
+      </div>
+    </aside>
+
+    <!-- ── MAIN AREA ── -->
+    <div class="main-area">
+
+      <!-- Top Bar -->
+      <header class="topbar">
+        <div class="tb-left">
+          <button class="tb-menu-btn" id="tbMenuBtn" onclick="toggleMobileMenu()">☰</button>
+          <div class="tb-breadcrumb">
+            <span class="tb-bc-icon" id="tbIcon">📊</span>
+            <span class="tb-bc-title" id="tbTitle">Dashboard</span>
+          </div>
+        </div>
+        <div class="tb-right">
+          <button class="tb-icon-btn" onclick="refreshPage()" title="รีเฟรช">🔄</button>
+          <div class="tb-datetime" id="tbDatetime"></div>
+          <button class="tb-avatar-btn" onclick="navTo('settings', null)">
+            <div class="tb-avatar" id="tbAvatar">A</div>
+          </button>
+        </div>
+      </header>
+
+      <!-- Page Content -->
+      <main class="page-content" id="pageContent">
+
+        <!-- ══ DASHBOARD ══ -->
+        <section class="page active" id="page-dashboard">
+          <div class="page-title">ภาพรวมระบบ</div>
+
+          <!-- KPI Row -->
+          <div class="kpi-grid" id="kpiGrid"></div>
+
+          <!-- Charts Row -->
+          <div class="charts-row">
+            <div class="chart-card wide">
+              <div class="chart-header">
+                <div class="chart-title">ยอดขาย 7 วันล่าสุด</div>
+                <div class="chart-actions">
+                  <button class="chart-btn active" onclick="switchChart('week',this)">สัปดาห์</button>
+                  <button class="chart-btn" onclick="switchChart('month',this)">เดือน</button>
+                </div>
+              </div>
+              <canvas id="salesChart" height="200"></canvas>
+            </div>
+            <div class="chart-card">
+              <div class="chart-header"><div class="chart-title">สินค้าขายดี</div></div>
+              <canvas id="topChart" height="200"></canvas>
+            </div>
+          </div>
+
+          <!-- Recent Orders -->
+          <div class="section-card">
+            <div class="sc-header">
+              <div class="sc-title">คำสั่งซื้อล่าสุด</div>
+              <button class="sc-link" onclick="navTo('orders', null)">ดูทั้งหมด →</button>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table" id="dashOrdersTable"></table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ══ ORDERS ══ -->
+        <section class="page" id="page-orders">
+          <div class="page-top-row">
+            <div class="page-title">คำสั่งซื้อ</div>
+            <div class="page-actions">
+              <select class="filter-select" id="orderStatusFilter" onchange="renderOrdersPage()">
+                <option value="all">ทุกสถานะ</option>
+                <option value="pending">รอดำเนินการ</option>
+                <option value="done">สำเร็จ</option>
+                <option value="cancel">ยกเลิก</option>
+              </select>
+            </div>
+          </div>
+          <div class="section-card">
+            <div class="table-wrap">
+              <table class="data-table" id="ordersTable"></table>
+            </div>
+            <div class="table-empty" id="ordersEmpty" style="display:none">ไม่มีคำสั่งซื้อ</div>
+          </div>
+        </section>
+
+        <!-- ══ PRODUCTS ══ -->
+        <section class="page" id="page-products">
+          <div class="page-top-row">
+            <div class="page-title">สินค้า / เมนู</div>
+            <button class="primary-btn" onclick="openProductModal()">+ เพิ่มสินค้า</button>
+          </div>
+
+          <!-- Search + filter -->
+          <div class="filter-bar">
+            <div class="filter-search">
+              <span>🔍</span>
+              <input type="text" id="productSearch" placeholder="ค้นหาสินค้า..." oninput="renderProductsPage()">
+            </div>
+            <select class="filter-select" id="productCatFilter" onchange="renderProductsPage()">
+              <option value="all">ทุกหมวด</option>
+              <option value="rice">🍚 ข้าว</option>
+              <option value="noodle">🍜 เฝอ/ก๋วย</option>
+              <option value="grill">🔥 ปิ้ง</option>
+              <option value="drink">🥤 เครื่องดื่ม</option>
+              <option value="dessert">🍮 ของหวาน</option>
+            </select>
+          </div>
+
+          <div class="section-card">
+            <div class="table-wrap">
+              <table class="data-table" id="productsTable"></table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ══ INVENTORY ══ -->
+        <section class="page" id="page-inventory">
+          <div class="page-top-row">
+            <div class="page-title">สต็อกสินค้า</div>
+            <button class="primary-btn" onclick="openStockModal()">+ ปรับสต็อก</button>
+          </div>
+
+          <!-- Stock alert -->
+          <div class="alert-banner" id="stockAlert"></div>
+
+          <div class="section-card">
+            <div class="table-wrap">
+              <table class="data-table" id="inventoryTable"></table>
+            </div>
+          </div>
+
+          <!-- Stock log -->
+          <div class="section-card" style="margin-top:16px">
+            <div class="sc-header"><div class="sc-title">ประวัติการปรับสต็อก</div></div>
+            <div class="table-wrap">
+              <table class="data-table" id="stockLogTable"></table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ══ REPORTS ══ -->
+        <section class="page" id="page-reports">
+          <div class="page-top-row">
+            <div class="page-title">รายงานยอดขาย</div>
+            <div class="page-actions">
+              <select class="filter-select" id="reportPeriod" onchange="renderReportsPage()">
+                <option value="7">7 วัน</option>
+                <option value="30">30 วัน</option>
+                <option value="90">90 วัน</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="kpi-grid" id="reportKpi"></div>
+
+          <div class="charts-row">
+            <div class="chart-card wide">
+              <div class="chart-header"><div class="chart-title">ยอดขายรายวัน</div></div>
+              <canvas id="reportChart" height="220"></canvas>
+            </div>
+            <div class="chart-card">
+              <div class="chart-header"><div class="chart-title">สัดส่วนหมวดหมู่</div></div>
+              <canvas id="catChart" height="220"></canvas>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <div class="sc-header">
+              <div class="sc-title">รายการขายทั้งหมด</div>
+              <button class="sc-link" onclick="exportCSV()">⬇ Export CSV</button>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table" id="reportTable"></table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ══ USERS ══ -->
+        <section class="page" id="page-users">
+          <div class="page-top-row">
+            <div class="page-title">ผู้ใช้งาน</div>
+            <button class="primary-btn" onclick="openUserModal()">+ เพิ่มผู้ใช้</button>
+          </div>
+          <div class="section-card">
+            <div class="table-wrap">
+              <table class="data-table" id="usersTable"></table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ══ SETTINGS ══ -->
+        <section class="page" id="page-settings">
+          <div class="page-title">ตั้งค่าระบบ</div>
+          <div class="settings-layout">
+
+            <div class="settings-group">
+              <div class="sg-title">🏪 ข้อมูลร้าน</div>
+              <div class="sg-row"><label>ชื่อร้าน</label><input class="sg-input" id="sStoreName" value="ร้านอาหารลาว"></div>
+              <div class="sg-row"><label>โทรศัพท์</label><input class="sg-input" id="sStorePhone" value="020 xxxx xxxx"></div>
+              <div class="sg-row"><label>ที่อยู่</label><input class="sg-input" id="sStoreAddr" value="เวียงจันทน์, ลาว"></div>
+              <div class="sg-row"><label>เวลาเปิด-ปิด</label><input class="sg-input" value="08:00 – 22:00"></div>
+              <button class="sg-btn" onclick="showToast('✅ บันทึกข้อมูลร้านแล้ว')">💾 บันทึก</button>
+            </div>
+
+            <div class="settings-group">
+              <div class="sg-title">💰 ภาษี & ส่วนลด</div>
+              <div class="sg-row"><label>VAT (%)</label><input class="sg-input" id="sVat" type="number" value="7"></div>
+              <div class="sg-row"><label>ส่วนลดสูงสุด (%)</label><input class="sg-input" type="number" value="20"></div>
+              <div class="sg-row"><label>สกุลเงิน</label>
+                <select class="sg-input">
+                  <option>LAK – ກີບ</option>
+                  <option>THB – บาท</option>
+                  <option>USD – Dollar</option>
+                </select>
+              </div>
+              <button class="sg-btn" onclick="showToast('✅ บันทึกการตั้งค่าภาษีแล้ว')">💾 บันทึก</button>
+            </div>
+
+            <div class="settings-group">
+              <div class="sg-title">🖨️ ใบเสร็จ</div>
+              <div class="sg-row"><label>หัวใบเสร็จ</label><input class="sg-input" value="ร้านอาหารลาว"></div>
+              <div class="sg-row"><label>ข้อความท้าย</label><input class="sg-input" value="ขอบคุณที่ใช้บริการ 🙏"></div>
+              <div class="sg-row"><label>แสดง VAT</label>
+                <select class="sg-input"><option>แสดง</option><option>ซ่อน</option></select>
+              </div>
+              <button class="sg-btn" onclick="showToast('✅ บันทึกการตั้งค่าใบเสร็จแล้ว')">💾 บันทึก</button>
+            </div>
+
+            <div class="settings-group">
+              <div class="sg-title">🔐 เปลี่ยนรหัสผ่าน</div>
+              <div class="sg-row"><label>รหัสปัจจุบัน</label><input class="sg-input" type="password" placeholder="••••••••"></div>
+              <div class="sg-row"><label>รหัสใหม่</label><input class="sg-input" type="password" placeholder="••••••••"></div>
+              <div class="sg-row"><label>ยืนยันรหัสใหม่</label><input class="sg-input" type="password" placeholder="••••••••"></div>
+              <button class="sg-btn" onclick="showToast('✅ เปลี่ยนรหัสผ่านแล้ว')">🔐 เปลี่ยนรหัสผ่าน</button>
+            </div>
+
+            <div class="settings-group danger-group">
+              <div class="sg-title">⚠️ Zone อันตราย</div>
+              <div class="sg-row" style="flex-direction:column;gap:10px">
+                <button class="sg-btn blue" onclick="showToast('💾 สำรองข้อมูลสำเร็จ')">💾 สำรองข้อมูล (Backup)</button>
+                <button class="sg-btn red" onclick="confirmReset()">🗑️ รีเซ็ตข้อมูลทั้งหมด</button>
+              </div>
+              <div class="version-info">POS-SST Admin v1.0.0 · Build 2025</div>
+            </div>
+
+          </div>
+        </section>
+
+      </main>
+    </div><!-- /main-area -->
+
+  </div><!-- /app-shell -->
+
+  <!-- ════════ MOBILE BOTTOM NAV ════════ -->
+  <nav class="mobile-nav" id="mobileNav" style="display:none">
+    <button class="mn-item active" data-page="dashboard" onclick="navTo('dashboard',this)">
+      <span>📊</span><span>หน้าหลัก</span>
+    </button>
+    <button class="mn-item" data-page="orders" onclick="navTo('orders',this)">
+      <span>📦</span><span>ออร์เดอร์</span>
+    </button>
+    <button class="mn-item" data-page="products" onclick="navTo('products',this)">
+      <span>🍽️</span><span>สินค้า</span>
+    </button>
+    <button class="mn-item" data-page="reports" onclick="navTo('reports',this)">
+      <span>📈</span><span>รายงาน</span>
+    </button>
+    <button class="mn-item" data-page="settings" onclick="navTo('settings',this)">
+      <span>⚙️</span><span>ตั้งค่า</span>
+    </button>
+  </nav>
+
+  <!-- ════════ MOBILE SIDEBAR OVERLAY ════════ -->
+  <div class="mob-overlay" id="mobOverlay" onclick="closeMobileMenu()"></div>
+
+  <!-- ════════ MODALS ════════ -->
+
+  <!-- Product Modal -->
+  <div class="modal-overlay" id="productModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title" id="productModalTitle">เพิ่มสินค้า</div>
+        <button class="modal-close" onclick="closeModal('productModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="pmId">
+        <div class="mf-row"><label>ชื่อสินค้า</label><input class="mf-input" id="pmName" placeholder="เช่น ข้าวผัด"></div>
+        <div class="mf-row"><label>ราคา (ກີບ)</label><input class="mf-input" id="pmPrice" type="number" inputmode="numeric" placeholder="35000"></div>
+        <div class="mf-row"><label>คำอธิบาย</label><input class="mf-input" id="pmDesc" placeholder="รายละเอียดสั้น ๆ"></div>
+        <div class="mf-row2">
+          <div class="mf-row"><label>หมวดหมู่</label>
+            <select class="mf-input" id="pmCat">
+              <option value="rice">🍚 ข้าว</option>
+              <option value="noodle">🍜 เฝอ/ก๋วย</option>
+              <option value="grill">🔥 ปิ้ง</option>
+              <option value="drink">🥤 เครื่องดื่ม</option>
+              <option value="dessert">🍮 ของหวาน</option>
+            </select>
+          </div>
+          <div class="mf-row"><label>สต็อกเริ่มต้น</label><input class="mf-input" id="pmStock" type="number" inputmode="numeric" placeholder="99"></div>
+        </div>
+        <div class="mf-row"><label>สถานะ</label>
+          <select class="mf-input" id="pmStatus">
+            <option value="active">✅ ขายอยู่</option>
+            <option value="soldout">❌ หมด</option>
+            <option value="hidden">🚫 ซ่อน</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn cancel" onclick="closeModal('productModal')">ยกเลิก</button>
+        <button class="modal-btn confirm" onclick="saveProduct()">💾 บันทึก</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stock Adjust Modal -->
+  <div class="modal-overlay" id="stockModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">ปรับสต็อกสินค้า</div>
+        <button class="modal-close" onclick="closeModal('stockModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="mf-row"><label>สินค้า</label>
+          <select class="mf-input" id="smProduct"></select>
+        </div>
+        <div class="mf-row2">
+          <div class="mf-row"><label>ประเภท</label>
+            <select class="mf-input" id="smType">
+              <option value="in">เข้า (+)</option>
+              <option value="out">ออก (−)</option>
+              <option value="set">ตั้งค่าใหม่</option>
+            </select>
+          </div>
+          <div class="mf-row"><label>จำนวน</label>
+            <input class="mf-input" id="smQty" type="number" inputmode="numeric" placeholder="10">
+          </div>
+        </div>
+        <div class="mf-row"><label>หมายเหตุ</label><input class="mf-input" id="smNote" placeholder="เช่น รับสินค้าใหม่"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn cancel" onclick="closeModal('stockModal')">ยกเลิก</button>
+        <button class="modal-btn confirm" onclick="saveStock()">✅ ยืนยัน</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Modal -->
+  <div class="modal-overlay" id="userModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title" id="userModalTitle">เพิ่มผู้ใช้</div>
+        <button class="modal-close" onclick="closeModal('userModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="umId">
+        <div class="mf-row"><label>ชื่อเต็ม</label><input class="mf-input" id="umName" placeholder="ชื่อ นามสกุล"></div>
+        <div class="mf-row"><label>Username</label><input class="mf-input" id="umUser" placeholder="username"></div>
+        <div class="mf-row"><label>รหัสผ่าน</label><input class="mf-input" id="umPass" type="password" placeholder="••••••••"></div>
+        <div class="mf-row"><label>บทบาท</label>
+          <select class="mf-input" id="umRole">
+            <option value="admin">⚡ Super Admin</option>
+            <option value="manager">👔 ผู้จัดการ</option>
+            <option value="cashier">🏪 พนักงานขาย</option>
+          </select>
+        </div>
+        <div class="mf-row"><label>สถานะ</label>
+          <select class="mf-input" id="umStatus">
+            <option value="active">✅ ใช้งาน</option>
+            <option value="inactive">🚫 ระงับ</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn cancel" onclick="closeModal('userModal')">ยกเลิก</button>
+        <button class="modal-btn confirm" onclick="saveUser()">💾 บันทึก</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Detail Modal -->
+  <div class="modal-overlay" id="orderDetailModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title" id="odTitle">รายละเอียดออร์เดอร์</div>
+        <button class="modal-close" onclick="closeModal('orderDetailModal')">✕</button>
+      </div>
+      <div class="modal-body" id="odBody"></div>
+      <div class="modal-footer">
+        <button class="modal-btn cancel" onclick="closeModal('orderDetailModal')">ปิด</button>
+        <button class="modal-btn confirm" onclick="printReceipt()">🖨️ พิมพ์ใบเสร็จ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ TOAST ════════ -->
+  <div class="toast-stack" id="toastStack"></div>
+
+  <script src="db.js"></script>
+  <script src="admin-script.js"></script>
+</body>
+</html>
