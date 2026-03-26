@@ -306,7 +306,13 @@ function renderTracking() {
         <div class="track-items">${itemsText}</div>
         <div class="track-footer">
           <div class="track-stepper">${stepHTML}</div>
-          <div class="track-total">${fmt(o.total)} ກີບ</div>
+          <button class="bill-btn" onclick="openBill(${o.id})">🧾 ເບິ່ງບິນ</button>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px 12px;border-top:1px solid var(--border)">
+          <span style="font-size:0.78rem;color:var(--muted)">
+            ${{pending:'⏳ ລໍຖ້າ',cooking:'👨‍🍳 ກຳລັງປຸງ',done:'✅ ສຳເລັດ',cancel:'❌ ຍົກເລີກ'}[o.status]||''}
+          </span>
+          <span style="font-weight:700;color:var(--accent2);font-size:0.9rem">${fmt(o.total)} ກີບ</span>
         </div>
       </div>`;
   }).join('');
@@ -355,4 +361,106 @@ function showToast(msg, dur=2200) {
   t.textContent = msg;
   wrap.appendChild(t);
   setTimeout(()=>{ t.style.opacity='0'; t.style.transition='all .3s'; setTimeout(()=>t.remove(),300); }, dur);
+}
+
+/* ════════════════════════════════════════
+   BILL MODAL
+════════════════════════════════════════ */
+
+let currentBillOrderId = null;
+let selectedPayment    = 'cash';
+
+function openBill(orderId) {
+  const order = POS_DB.orders.get(orderId);
+  if (!order) return;
+  currentBillOrderId = orderId;
+
+  const s = POS_DB.settings.get();
+
+  // Store info
+  document.getElementById('billStoreName').textContent = s.storeName || 'ຮ້ານອາຫານລາວ';
+  document.getElementById('billStoreMeta').textContent =
+    (s.address || 'ວຽງຈັນ, ລາວ') + ' · ' + (s.phone || '—');
+
+  // Order info
+  document.getElementById('billTable').textContent    = order.tableCode;
+  document.getElementById('billOrderNum').textContent = '#' + order.num;
+  document.getElementById('billTime').textContent     = order.time;
+
+  // Items
+  document.getElementById('billBody').innerHTML = order.items.map(i => `
+    <div class="bill-item">
+      <div class="bill-item-left">
+        <span class="bill-item-emoji">${i.emoji || '🍽️'}</span>
+        <div>
+          <div class="bill-item-name">${i.name}</div>
+          <div class="bill-item-qty">× ${i.qty} &nbsp;@&nbsp; ${fmt(i.price)} ກີບ</div>
+        </div>
+      </div>
+      <div class="bill-item-price">${fmt(i.price * i.qty)} ກີບ</div>
+    </div>`).join('');
+
+  // Summary
+  document.getElementById('billSub').textContent   = fmt(order.subtotal) + ' ກີບ';
+  document.getElementById('billVat').textContent   = fmt(order.vatAmt)   + ' ກີບ';
+  document.getElementById('billTotal').textContent = fmt(order.total)    + ' ກີບ';
+
+  // Payment section — show only for non-done orders
+  const paySection = document.getElementById('billPaySection');
+  const statusArea = document.getElementById('billStatusArea');
+  const footerText = document.getElementById('billFooterText');
+
+  if (order.status === 'done') {
+    // Paid — show done badge, hide payment picker
+    paySection.style.display = 'none';
+    statusArea.innerHTML = `
+      <div class="bill-status-tag">✅ ຊຳລະແລ້ວ — ${payMethodLabel(order.paymentMethod)}</div>`;
+    footerText.textContent = s.receiptFooter || 'ຂໍຂອບໃຈທີ່ໃຊ້ບໍລິການ 🙏';
+  } else if (order.status === 'cancel') {
+    paySection.style.display = 'none';
+    statusArea.innerHTML = `<div class="bill-status-tag" style="background:rgba(231,76,60,.12);color:var(--red);border-color:rgba(231,76,60,.3)">❌ ຍົກເລີກ</div>`;
+    footerText.textContent = '';
+  } else {
+    // Pending / cooking — show payment picker
+    paySection.style.display = 'block';
+    statusArea.innerHTML = '';
+    // Reset selection UI
+    document.querySelectorAll('.pay-opt').forEach(o => {
+      o.classList.toggle('selected', o.dataset.method === selectedPayment);
+    });
+    updateQrBlock();
+  }
+
+  document.getElementById('billOverlay').classList.add('show');
+}
+
+function closeBill() {
+  document.getElementById('billOverlay').classList.remove('show');
+  currentBillOrderId = null;
+}
+
+function closeBillOnOverlay(e) {
+  if (e.target === document.getElementById('billOverlay')) closeBill();
+}
+
+function selectPayment(method, el) {
+  selectedPayment = method;
+  document.querySelectorAll('.pay-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  updateQrBlock();
+
+  // Persist payment method to order
+  if (currentBillOrderId) {
+    const orders = POS_DB.orders.getAll();
+    const o = orders.find(x => x.id === currentBillOrderId);
+    if (o) { o.paymentMethod = method; POS_DB.orders.save(orders); }
+  }
+}
+
+function updateQrBlock() {
+  document.getElementById('qrBlock').classList.toggle('show', selectedPayment === 'qr');
+}
+
+function payMethodLabel(m) {
+  return { cash:'ເງິນສົດ', qr:'QR Code', transfer:'ໂອນເງິນ' }[m] || m || 'ເງິນສົດ';
 }

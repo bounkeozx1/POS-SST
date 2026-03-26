@@ -168,6 +168,70 @@
     </div>
   </div>
 
+
+  <!-- BILL MODAL -->
+  <div class="bill-overlay" id="billOverlay" onclick="closeBillOnOverlay(event)">
+    <div class="bill-sheet" id="billSheet">
+      <div class="bill-handle"></div>
+
+      <div class="bill-header">
+        <div class="bill-title">🧾 ໃບບິນ</div>
+        <button class="bill-close" onclick="closeBill()">✕</button>
+      </div>
+
+      <!-- Store header -->
+      <div class="bill-store-header">
+        <div class="bill-store-name" id="billStoreName">ຮ້ານອາຫານລາວ</div>
+        <div class="bill-store-meta" id="billStoreMeta">ວຽງຈັນ, ລາວ · 020 xxxx xxxx</div>
+      </div>
+
+      <!-- Order info -->
+      <div class="bill-info">
+        <div>ໂຕ: <b id="billTable">—</b></div>
+        <div>Order: <b id="billOrderNum">—</b></div>
+        <div>ເວລາ: <b id="billTime">—</b></div>
+      </div>
+
+      <!-- Item list -->
+      <div class="bill-body" id="billBody"></div>
+
+      <!-- Summary -->
+      <div class="bill-summary">
+        <div class="bill-sum-row"><span>ລາຄາສິນຄ້າ</span><span id="billSub">0 ກີບ</span></div>
+        <div class="bill-sum-row"><span>VAT 7%</span><span id="billVat">0 ກີບ</span></div>
+        <div class="bill-sum-row grand"><span>ລວມທັງໝົດ</span><span id="billTotal">0 ກີບ</span></div>
+      </div>
+
+      <!-- Payment method (only show if pending/cooking) -->
+      <div class="bill-pay-section" id="billPaySection">
+        <div class="bill-pay-label">ວິທີຊຳລະເງິນ</div>
+        <div class="bill-pay-options">
+          <div class="pay-opt selected" data-method="cash" onclick="selectPayment('cash',this)">
+            <span class="pay-opt-icon">💵</span>ເງິນສົດ
+          </div>
+          <div class="pay-opt" data-method="qr" onclick="selectPayment('qr',this)">
+            <span class="pay-opt-icon">📱</span>QR Code
+          </div>
+          <div class="pay-opt" data-method="transfer" onclick="selectPayment('transfer',this)">
+            <span class="pay-opt-icon">🏦</span>ໂອນ
+          </div>
+        </div>
+        <!-- QR placeholder -->
+        <div class="qr-block" id="qrBlock">
+          <div class="qr-grid"></div>
+          <div class="qr-label">ສະແກນເພື່ອຊຳລະ</div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="bill-footer">
+        <div id="billStatusArea"></div>
+        <div style="font-size:0.72rem;color:var(--muted);text-align:center;margin-top:6px" id="billFooterText">ຂໍຂອບໃຈທີ່ໃຊ້ບໍລິການ 🙏</div>
+      </div>
+
+    </div>
+  </div>
+
   <div class="toast-wrap" id="toastWrap"></div>
   <script src="db.js"></script>
   <script src="script.js"></script>

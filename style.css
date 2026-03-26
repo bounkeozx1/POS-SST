@@ -958,16 +958,17 @@ button, [role="button"],
 /* ── TOAST ── */
 .toast-wrap {
   position: fixed;
-  bottom: calc(var(--nav-h) + 16px);
+  /* Top position — never overlaps cart sheet confirm button */
+  top: calc(var(--header-h) + 10px);
   left: 50%; transform: translateX(-50%);
-  z-index: 300;
+  z-index: 400;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
   pointer-events: none;
-  width: 90%;
-  max-width: 340px;
+  width: 88%;
+  max-width: 320px;
 }
 
 .toast {
@@ -1148,3 +1149,174 @@ button, [role="button"],
   padding: 0 4px;
 }
 .nav-item { position: relative; }
+
+/* ════════════════════════════════════════
+   BILL MODAL
+════════════════════════════════════════ */
+.bill-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(6px);
+  z-index: 200;
+  align-items: flex-end;
+  justify-content: center;
+}
+.bill-overlay.show { display: flex; }
+
+.bill-sheet {
+  background: var(--surface);
+  border-radius: 24px 24px 0 0;
+  width: 100%; max-width: 480px;
+  max-height: 90vh; max-height: 90dvh;
+  display: flex; flex-direction: column;
+  padding-bottom: env(safe-area-inset-bottom);
+  animation: billUp 0.3s cubic-bezier(.4,0,.2,1);
+}
+@keyframes billUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.bill-handle {
+  width: 40px; height: 4px;
+  background: var(--surface3); border-radius: 4px;
+  margin: 12px auto 0; flex-shrink: 0;
+}
+
+.bill-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px 10px; flex-shrink: 0;
+}
+.bill-title    { font-size: 1rem; font-weight: 700; }
+.bill-close {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--muted); font-size: 0.85rem;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; touch-action: manipulation;
+}
+
+/* Store header on bill */
+.bill-store-header {
+  text-align: center;
+  padding: 10px 20px 14px;
+  border-bottom: 1px dashed var(--border);
+  flex-shrink: 0;
+}
+.bill-store-name { font-size: 1rem; font-weight: 700; margin-bottom: 3px; }
+.bill-store-meta { font-size: 0.72rem; color: var(--muted); }
+
+/* Order info row */
+.bill-info {
+  display: flex; justify-content: space-between;
+  padding: 12px 20px 8px;
+  font-size: 0.78rem; color: var(--muted);
+  flex-shrink: 0;
+}
+.bill-info b { color: var(--text); }
+
+/* Scrollable body */
+.bill-body {
+  flex: 1; overflow-y: auto;
+  padding: 0 20px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Item rows */
+.bill-item {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 9px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  font-size: 0.88rem;
+}
+.bill-item:last-child { border-bottom: none; }
+.bill-item-left  { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+.bill-item-emoji { font-size: 1.2rem; flex-shrink: 0; }
+.bill-item-name  { font-size: 0.85rem; }
+.bill-item-qty   { font-size: 0.75rem; color: var(--muted); }
+.bill-item-price { font-size: 0.85rem; font-weight: 600; color: var(--text); white-space: nowrap; }
+
+/* Summary */
+.bill-summary {
+  padding: 12px 20px 0;
+  border-top: 1px dashed var(--border);
+  flex-shrink: 0;
+}
+.bill-sum-row {
+  display: flex; justify-content: space-between;
+  font-size: 0.85rem; color: var(--text2);
+  margin-bottom: 7px;
+}
+.bill-sum-row.grand {
+  font-size: 1.05rem; font-weight: 700;
+  color: var(--text);
+  border-top: 1px solid var(--border);
+  padding-top: 10px; margin-top: 6px;
+}
+.bill-sum-row.grand span:last-child { color: var(--accent2); }
+
+/* Payment method picker */
+.bill-pay-section {
+  padding: 14px 20px 4px; flex-shrink: 0;
+}
+.bill-pay-label { font-size: 0.72rem; color: var(--muted); margin-bottom: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+.bill-pay-options {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.pay-opt {
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  padding: 10px 6px;
+  background: var(--surface2); border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); cursor: pointer;
+  font-size: 0.72rem; color: var(--text2); font-weight: 600;
+  touch-action: manipulation; transition: all 0.15s;
+}
+.pay-opt:active { transform: scale(0.96); }
+.pay-opt.selected { border-color: var(--accent); background: var(--accent-dim, rgba(255,107,53,0.1)); color: var(--accent2); }
+.pay-opt-icon { font-size: 1.5rem; }
+
+/* QR placeholder */
+.qr-block {
+  display: none;
+  margin: 12px 20px 0;
+  padding: 16px;
+  background: white; border-radius: var(--radius);
+  text-align: center;
+}
+.qr-block.show { display: block; }
+.qr-grid {
+  width: 100px; height: 100px; margin: 0 auto 8px;
+  background: repeating-conic-gradient(#000 0% 25%, white 0% 50%) 0 0 / 10px 10px;
+  border-radius: 4px;
+}
+.qr-label { font-size: 0.72rem; color: #333; }
+
+/* Footer CTA */
+.bill-footer {
+  padding: 14px 20px 8px; flex-shrink: 0;
+  border-top: 1px solid var(--border);
+}
+.bill-status-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(39,174,96,0.12); color: var(--green);
+  border: 1px solid rgba(39,174,96,0.3);
+  border-radius: 20px; padding: 6px 14px;
+  font-size: 0.78rem; font-weight: 600;
+  margin-bottom: 10px;
+}
+
+/* Bill button on track card */
+.bill-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 6px 12px;
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text2); font-size: 0.75rem; font-weight: 600;
+  cursor: pointer; touch-action: manipulation;
+  transition: all 0.15s; font-family: inherit;
+}
+.bill-btn:active { background: var(--accent); border-color: var(--accent); color: white; }
