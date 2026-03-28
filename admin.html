@@ -41,9 +41,9 @@
           </div>
         </div>
         <div class="login-error" id="loginError"></div>
-        <button class="login-btn" onclick="doLogin()">เข้าสู่ระบบ</button>
+        <button class="login-btn" onclick="doLogin()"><span data-i18n="login.btn">เข้าสู่ระบบ</span></button>
       </div>
-      <div class="login-hint">admin / 1234</div>
+      <div class="login-hint"><span data-i18n="login.hint">admin / 1234</span></div>
     </div>
   </div>
 
@@ -68,27 +68,27 @@
       <nav class="sb-nav">
         <div class="sb-section-label">เมนูหลัก</div>
         <button class="sb-item active" data-page="dashboard" onclick="navTo('dashboard', this)">
-          <span class="sb-icon">📊</span><span class="sb-label">Dashboard</span>
+          <span class="sb-icon">📊</span><span class="sb-label" data-i18n="admin.dashboard">Dashboard</span>
         </button>
         <button class="sb-item" data-page="orders" onclick="navTo('orders', this)">
-          <span class="sb-icon">📦</span><span class="sb-label">คำสั่งซื้อ</span>
+          <span class="sb-icon">📦</span><span class="sb-label" data-i18n="admin.orders">คำสั่งซื้อ</span>
           <span class="sb-badge" id="sbBadgeOrders">0</span>
         </button>
         <button class="sb-item" data-page="products" onclick="navTo('products', this)">
-          <span class="sb-icon">🍽️</span><span class="sb-label">สินค้า / เมนู</span>
+          <span class="sb-icon">🍽️</span><span class="sb-label" data-i18n="admin.products">สินค้า / เมนู</span>
         </button>
         <button class="sb-item" data-page="inventory" onclick="navTo('inventory', this)">
-          <span class="sb-icon">📋</span><span class="sb-label">สต็อกสินค้า</span>
+          <span class="sb-icon">📋</span><span class="sb-label" data-i18n="admin.inventory">สต็อกสินค้า</span>
         </button>
         <div class="sb-section-label">ระบบ</div>
         <button class="sb-item" data-page="reports" onclick="navTo('reports', this)">
-          <span class="sb-icon">📈</span><span class="sb-label">รายงาน</span>
+          <span class="sb-icon">📈</span><span class="sb-label" data-i18n="admin.reports">รายงาน</span>
         </button>
         <button class="sb-item" data-page="users" onclick="navTo('users', this)">
-          <span class="sb-icon">👥</span><span class="sb-label">ผู้ใช้งาน</span>
+          <span class="sb-icon">👥</span><span class="sb-label" data-i18n="admin.users">ผู้ใช้งาน</span>
         </button>
         <button class="sb-item" data-page="settings" onclick="navTo('settings', this)">
-          <span class="sb-icon">⚙️</span><span class="sb-label">ตั้งค่า</span>
+          <span class="sb-icon">⚙️</span><span class="sb-label" data-i18n="admin.settings">ตั้งค่า</span>
         </button>
       </nav>
 
@@ -97,7 +97,7 @@
           <div class="sb-avatar" id="sbAvatar">A</div>
           <div class="sb-user-info">
             <div class="sb-user-name" id="sbUserName">Admin</div>
-            <div class="sb-user-role">Super Admin</div>
+            <div class="sb-user-role" data-i18n="users.role.admin">Super Admin</div>
           </div>
         </div>
         <button class="sb-logout" onclick="doLogout()" title="ออกจากระบบ">⏻</button>
@@ -118,6 +118,7 @@
         </div>
         <div class="tb-right">
           <button class="tb-icon-btn" onclick="refreshPage()" title="รีเฟรช">🔄</button>
+        <div id="langMount"></div>
           <div class="tb-datetime" id="tbDatetime"></div>
           <button class="tb-avatar-btn" onclick="navTo('settings', null)">
             <div class="tb-avatar" id="tbAvatar">A</div>
@@ -357,19 +358,19 @@
   <!-- ════════ MOBILE BOTTOM NAV ════════ -->
   <nav class="mobile-nav" id="mobileNav" style="display:none">
     <button class="mn-item active" data-page="dashboard" onclick="navTo('dashboard',this)">
-      <span>📊</span><span>หน้าหลัก</span>
+      <span>📊</span><span data-i18n="admin.dashboard">หน้าหลัก</span>
     </button>
     <button class="mn-item" data-page="orders" onclick="navTo('orders',this)">
-      <span>📦</span><span>ออร์เดอร์</span>
+      <span>📦</span><span data-i18n="admin.orders">ออร์เดอร์</span>
     </button>
     <button class="mn-item" data-page="products" onclick="navTo('products',this)">
-      <span>🍽️</span><span>สินค้า</span>
+      <span>🍽️</span><span data-i18n="admin.products">สินค้า</span>
     </button>
     <button class="mn-item" data-page="reports" onclick="navTo('reports',this)">
-      <span>📈</span><span>รายงาน</span>
+      <span>📈</span><span data-i18n="admin.reports">รายงาน</span>
     </button>
     <button class="mn-item" data-page="settings" onclick="navTo('settings',this)">
-      <span>⚙️</span><span>ตั้งค่า</span>
+      <span>⚙️</span><span data-i18n="admin.settings">ตั้งค่า</span>
     </button>
   </nav>
 
@@ -500,6 +501,7 @@
   <!-- ════════ TOAST ════════ -->
   <div class="toast-stack" id="toastStack"></div>
 
+  <script src="i18n.js"></script>
   <script src="db.js"></script>
   <script src="admin-script.js"></script>
 </body>

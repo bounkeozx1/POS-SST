@@ -1,39 +1,55 @@
-/* ============================================================
-   script.js — Self-Ordering (index.html) — Clean User Version
-   Pages: สั่ง | ติดตามออร์เดอร์
-   Removed: Settings, Log, total revenue report
-   ============================================================ */
 'use strict';
+/* script.js — User Self-Order Page
+   Requires: i18n.js → db.js → script.js  */
 
-let cart=[], currentCat='all', searchQuery='';
-const catNames={all:'ທັງໝົດ',rice:'ຂ້າວ',noodle:'ເຝີ/ກ໋ວຍ',grill:'ປີ້ງ',drink:'ດື່ມ',dessert:'ຂອງຫວານ'};
+let cart = [], currentCat = 'all', searchQuery = '';
+const catKeys = { all:'cat.all', rice:'cat.rice', noodle:'cat.noodle', grill:'cat.grill', drink:'cat.drink', dessert:'cat.dessert' };
+const catIcons = { all:'🍽️ ', rice:'🍚 ', noodle:'🍜 ', grill:'🔥 ', drink:'🥤 ', dessert:'🍮 ' };
 
-// ── Init ───────────────────────────────────────────────────
+/* ── Init ─────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
-  loadStoreInfo();
-  renderMenu();
-  setupSheetSwipe();
+  // 1. Language switcher — always mount in header
+  i18n.buildSwitcher(document.getElementById('langMount'));
 
-  // React to admin changes: menu updates, order status changes
+  // 2. When language changes: re-render all dynamic UI
+  window.addEventListener('langchange', () => {
+    renderCatPills();
+    renderMenu();
+    renderSheet();
+    renderTracking();
+    updateCartBar();
+    // Update static data-i18n nodes
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      el.textContent = i18n.t(el.dataset.i18n);
+    });
+    document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+      el.placeholder = i18n.t(el.dataset.i18nPh);
+    });
+  });
+
+  // 3. React to admin changes (menu edits, order status updates)
   POS_DB.onExternalChange(key => {
-    if (key === POS_DB.KEY.products) { renderMenu(); }
+    if (key === POS_DB.KEY.products) renderMenu();
     if (key === POS_DB.KEY.orders)   { renderTracking(); updateHeaderPill(); }
   });
 
-  // Poll order status every 8s (fallback for same-tab usage)
+  // 4. Load store name from settings
+  const s = POS_DB.settings.get();
+  const storeNameEl = document.getElementById('headerStoreName');
+  const mapNameEl   = document.getElementById('mapStoreName');
+  if (storeNameEl) storeNameEl.textContent = s.storeName || i18n.t('app.name');
+  if (mapNameEl)   mapNameEl.textContent   = (s.storeName || i18n.t('app.name'));
+
+  // 5. Initial renders
+  renderCatPills();
+  renderMenu();
+  setupSheetSwipe();
+
+  // 6. Poll order status every 8s
   setInterval(() => { renderTracking(); updateHeaderPill(); }, 8000);
 });
 
-// ── Store info from DB ─────────────────────────────────────
-function loadStoreInfo() {
-  const s = POS_DB.settings.get();
-  const nameEl = document.getElementById('headerStoreName');
-  const mapEl  = document.getElementById('mapStoreName');
-  if (nameEl) nameEl.textContent = s.storeName || 'ຮ້ານອາຫານລາວ';
-  if (mapEl)  mapEl.textContent  = (s.storeName || 'ຮ້ານອາຫານລາວ') + ' — ສາຂາຫຼັກ';
-}
-
-// ── Helpers ────────────────────────────────────────────────
+/* ── Helpers ──────────────────────────────────────────── */
 function getTableCode() {
   return new URLSearchParams(window.location.search).get('table')
       || document.getElementById('tableCode')?.textContent
@@ -43,7 +59,7 @@ function getTableId() {
   return new URLSearchParams(window.location.search).get('tableId') || 'table_default';
 }
 
-// ── Page Navigation ────────────────────────────────────────
+/* ── Page navigation ──────────────────────────────────── */
 function showPage(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
@@ -53,42 +69,13 @@ function showPage(page) {
   if (page === 'track') { renderTracking(); updateHeaderPill(); }
 }
 
-// ── Menu ───────────────────────────────────────────────────
-function renderMenu() {
-  const grid = document.getElementById('menuGrid');
-  const filtered = POS_DB.products.getAll().filter(item => {
-    const mc = currentCat === 'all' || item.cat === currentCat;
-    const ms = !searchQuery
-      || item.name.toLowerCase().includes(searchQuery)
-      || item.desc.toLowerCase().includes(searchQuery);
-    return mc && ms;
+/* ── Category pills ───────────────────────────────────── */
+function renderCatPills() {
+  document.querySelectorAll('.cat-pill[data-cat]').forEach(pill => {
+    const cat = pill.dataset.cat;
+    pill.textContent = (catIcons[cat] || '') + i18n.t(catKeys[cat] || 'cat.all');
   });
-  document.getElementById('sectionLabel').textContent = catNames[currentCat] || 'ທັງໝົດ';
-  if (!filtered.length) {
-    grid.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><div>ບໍ່ພົບເມນູ</div></div>`;
-    return;
-  }
-  grid.innerHTML = filtered.map(item => {
-    const qty    = (cart.find(c => c.id === item.id)||{qty:0}).qty;
-    const isSold = item.status !== 'active' || item.stock <= 0;
-    return `
-      <div class="menu-card${isSold?' sold-out-card':''}" id="card-${item.id}"
-           onclick="${isSold?'':'tapCard('+item.id+')'}">
-        ${isSold?'<div class="sold-out-badge">ໝົດ</div>':''}
-        <div class="card-qty-badge${qty>0?' show':''}" id="badge-${item.id}">${qty}</div>
-        <div class="menu-emoji">${item.emoji}</div>
-        <div class="menu-body">
-          <div class="menu-name">${item.name}</div>
-          <div class="menu-desc">${item.desc}</div>
-          <div class="menu-footer">
-            <div class="menu-price">${fmt(item.price)} <small>ກີບ</small></div>
-            ${isSold
-              ? '<span style="color:var(--red);font-size:.72rem">ໝົດ</span>'
-              : `<button class="add-btn" onclick="event.stopPropagation();addToCart(${item.id})">+</button>`}
-          </div>
-        </div>
-      </div>`;
-  }).join('');
+  document.getElementById('sectionLabel').textContent = i18n.t(catKeys[currentCat] || 'cat.all');
 }
 
 function filterCat(cat, el) {
@@ -96,7 +83,9 @@ function filterCat(cat, el) {
   document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
   el.classList.add('active');
   renderMenu();
+  document.getElementById('sectionLabel').textContent = i18n.t(catKeys[cat] || 'cat.all');
 }
+
 function searchMenu(val) {
   searchQuery = val.toLowerCase().trim();
   document.getElementById('searchClear').style.display = val ? 'flex' : 'none';
@@ -107,15 +96,47 @@ function clearSearch() {
   searchMenu('');
 }
 
-// ── Cart ───────────────────────────────────────────────────
+/* ── Menu render ──────────────────────────────────────── */
+function renderMenu() {
+  const grid     = document.getElementById('menuGrid');
+  const filtered = POS_DB.products.getAll().filter(item => {
+    const mc = currentCat === 'all' || item.cat === currentCat;
+    const ms = !searchQuery || item.name.toLowerCase().includes(searchQuery) || item.desc.toLowerCase().includes(searchQuery);
+    return mc && ms;
+  });
+
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><div>${i18n.t('order.notfound')}</div></div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(item => {
+    const qty    = (cart.find(c => c.id === item.id) || {qty:0}).qty;
+    const isSold = item.status !== 'active' || item.stock <= 0;
+    return `
+      <div class="menu-card${isSold?' sold-out-card':''}" id="card-${item.id}" onclick="${isSold?'':'tapCard('+item.id+')'}">
+        ${isSold ? `<div class="sold-out-badge">${i18n.t('order.soldout')}</div>` : ''}
+        <div class="card-qty-badge${qty>0?' show':''}" id="badge-${item.id}">${qty}</div>
+        <div class="menu-emoji">${item.emoji}</div>
+        <div class="menu-body">
+          <div class="menu-name">${item.name}</div>
+          <div class="menu-desc">${item.desc}</div>
+          <div class="menu-footer">
+            <div class="menu-price">${fmt(item.price)} <small>${i18n.t('currency')}</small></div>
+            ${isSold
+              ? `<span style="color:var(--red);font-size:.72rem">${i18n.t('order.soldout')}</span>`
+              : `<button class="add-btn" onclick="event.stopPropagation();addToCart(${item.id})">+</button>`}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+/* ── Cart ─────────────────────────────────────────────── */
 function tapCard(id) {
   addToCart(id);
-  const card = document.getElementById('card-' + id);
-  if (card) {
-    card.style.transition = 'transform .15s';
-    card.style.transform  = 'scale(.94)';
-    setTimeout(() => card.style.transform = 'scale(1)', 150);
-  }
+  const c = document.getElementById('card-' + id);
+  if (c) { c.style.transition='transform .15s'; c.style.transform='scale(.94)'; setTimeout(()=>c.style.transform='scale(1)',150); }
 }
 
 function addToCart(id) {
@@ -123,7 +144,7 @@ function addToCart(id) {
   if (!item || item.status !== 'active' || item.stock <= 0) return;
   const ex = cart.find(c => c.id === id);
   if (ex) {
-    if (ex.qty >= item.stock) { showToast('⚠️ ສ່ວ ' + item.name + ' ໝົດ'); return; }
+    if (ex.qty >= item.stock) { showToast('⚠️ ' + i18n.t('order.soldout')); return; }
     ex.qty++;
   } else {
     cart.push({ id:item.id, name:item.name, price:item.price, emoji:item.emoji, qty:1 });
@@ -164,7 +185,8 @@ function updateCartBar() {
   if (!qty) { bar.style.display = 'none'; return; }
   bar.style.display = 'flex';
   document.getElementById('cartBarQty').textContent   = qty;
-  document.getElementById('cartBarTotal').textContent = fmt(cartGrandTotal()) + ' ກີບ';
+  document.getElementById('cartBarTotal').textContent = fmt(cartGrandTotal()) + ' ' + i18n.t('currency');
+  document.getElementById('cartBarMid').textContent   = i18n.t('cart.view');
 }
 
 function openCart()  {
@@ -179,8 +201,15 @@ function closeCart() {
 
 function renderSheet() {
   const body = document.getElementById('sheetBody');
+  document.getElementById('sheetTitle').textContent = i18n.t('cart.title');
+  document.getElementById('sumSubLabel').textContent  = i18n.t('cart.subtotal');
+  document.getElementById('vatLabel').textContent     = i18n.t('vat.label');
+  document.getElementById('sumTotalLabel').textContent= i18n.t('cart.total');
+  document.getElementById('confirmOrderBtn').textContent = '✅ ' + i18n.t('cart.confirm');
+  document.getElementById('clearCartBtn').textContent    = i18n.t('cart.clear');
+
   if (!cart.length) {
-    body.innerHTML = `<div class="cart-empty-sheet"><div class="e-icon">🛒</div>ຍັງບໍ່ມີລາຍການ</div>`;
+    body.innerHTML = `<div class="cart-empty-sheet"><div class="e-icon">🛒</div>${i18n.t('cart.empty')}<br><small style="color:var(--muted)">${i18n.t('cart.empty.sub')}</small></div>`;
     updateSheetSummary(0,0,0);
     return;
   }
@@ -189,7 +218,7 @@ function renderSheet() {
       <div class="ci-emoji">${c.emoji}</div>
       <div class="ci-info">
         <div class="ci-name">${c.name}</div>
-        <div class="ci-price">${fmt(c.price * c.qty)} ກີບ</div>
+        <div class="ci-price">${fmt(c.price * c.qty)} ${i18n.t('currency')}</div>
       </div>
       <div class="ci-ctrl">
         <button class="ci-btn" onclick="changeQty(${c.id},-1)">−</button>
@@ -197,28 +226,30 @@ function renderSheet() {
         <button class="ci-btn" onclick="changeQty(${c.id},+1)">+</button>
       </div>
     </div>`).join('');
-  const sub = cartSubtotal();
-  const vat = Math.round(sub * (POS_DB.settings.getVat() / 100));
+  const sub = cartSubtotal(), vat = Math.round(sub * (POS_DB.settings.getVat() / 100));
   updateSheetSummary(sub, vat, sub + vat);
 }
 
 function updateSheetSummary(s, v, t) {
-  document.getElementById('sumSub').textContent   = fmt(s) + ' ກີບ';
-  document.getElementById('sumVat').textContent   = fmt(v) + ' ກີບ';
-  document.getElementById('sumTotal').textContent = fmt(t) + ' ກີບ';
+  document.getElementById('sumSub').textContent   = fmt(s) + ' ' + i18n.t('currency');
+  document.getElementById('sumVat').textContent   = fmt(v) + ' ' + i18n.t('currency');
+  document.getElementById('sumTotal').textContent = fmt(t) + ' ' + i18n.t('currency');
 }
 
-// ── Place Order ────────────────────────────────────────────
+/* ── Place Order ──────────────────────────────────────── */
 function placeOrder() {
-  if (!cart.length) { showToast('⚠️ ກາລຸນາເລືອກອາຫານ'); return; }
+  if (!cart.length) { showToast('⚠️ ' + i18n.t('cart.empty.sub')); return; }
   const order = POS_DB.orders.create({
     tableCode:     getTableCode(),
     tableId:       getTableId(),
-    items:         cart.map(c => ({ id:c.id, name:c.name, price:c.price, qty:c.qty, emoji:c.emoji })),
+    items:         cart.map(c => ({id:c.id,name:c.name,price:c.price,qty:c.qty,emoji:c.emoji})),
     paymentMethod: 'cash',
   });
   document.getElementById('modalNum').textContent   = '#' + order.num;
   document.getElementById('modalTable').textContent = order.tableCode;
+  document.getElementById('modalSuccessTitle').textContent = i18n.t('modal.success');
+  document.getElementById('modalSuccessSub').textContent   = i18n.t('modal.wait');
+  document.getElementById('modalTrackBtn').textContent     = i18n.t('modal.track');
   document.getElementById('modal').classList.add('show');
   cart.forEach(c => updateCartBadge(c.id, 0));
   cart = [];
@@ -231,71 +262,72 @@ function placeOrder() {
 
 function closeModal() {
   document.getElementById('modal').classList.remove('show');
-  showPage('track'); // redirect to tracking after order
+  showPage('track');
 }
 
-// ── Order Tracking — MY ORDERS ONLY (this table) ──────────
+/* ── Order Tracking ───────────────────────────────────── */
 function renderTracking() {
   const myTable  = getTableCode();
-  // Filter orders for THIS table only — no other tables' data
   const myOrders = POS_DB.orders.getAll().filter(o => o.tableCode === myTable);
 
-  const pending  = myOrders.filter(o => o.status === 'pending').length;
-  const cooking  = myOrders.filter(o => o.status === 'cooking').length;
-  const done     = myOrders.filter(o => o.status === 'done').length;
+  const pending = myOrders.filter(o => o.status==='pending').length;
+  const cooking = myOrders.filter(o => o.status==='cooking').length;
+  const done    = myOrders.filter(o => o.status==='done').length;
 
   document.getElementById('tPendingNum').textContent = pending;
   document.getElementById('tCookingNum').textContent = cooking;
   document.getElementById('tDoneNum').textContent    = done;
+  document.getElementById('trackPageTitle').textContent = i18n.t('track.title');
+  document.getElementById('tPendingLbl').textContent = i18n.t('status.pending');
+  document.getElementById('tCookingLbl').textContent = i18n.t('status.cooking');
+  document.getElementById('tDoneLbl').textContent    = i18n.t('status.done');
 
-  // Nav badge — show pending count
+  const active = pending + cooking;
   const navBadge = document.getElementById('navPendingBadge');
-  const active   = pending + cooking;
-  navBadge.style.display  = active > 0 ? 'flex' : 'none';
-  navBadge.textContent    = active;
+  navBadge.style.display = active > 0 ? 'flex' : 'none';
+  navBadge.textContent   = active;
+
+  document.getElementById('navOrderLabel').textContent   = i18n.t('nav.order');
+  document.getElementById('navTrackLabel').textContent   = i18n.t('nav.myorders');
 
   const list = document.getElementById('trackOrders');
   if (!myOrders.length) {
     list.innerHTML = `
       <div class="empty-state">
         <div class="empty-icon">🍽️</div>
-        <div>ຍັງບໍ່ມີອໍ້ເດີ</div>
-        <div style="font-size:.8rem;color:var(--muted);margin-top:6px">ກົດ "ສັ່ງ" ເພື່ອເລືອກອາຫານ</div>
+        <div>${i18n.t('track.empty')}</div>
+        <div style="font-size:.8rem;color:var(--muted);margin-top:6px">${i18n.t('track.empty.sub')}</div>
       </div>`;
     document.getElementById('sessionTotal').style.display = 'none';
     return;
   }
 
-  list.innerHTML = myOrders.map(o => {
-    const steps = [
-      { key:'pending', label:'ຮັບ' },
-      { key:'cooking', label:'ປຸງ' },
-      { key:'done',    label:'ສຳເລັດ' },
-    ];
-    const statusIdx = { pending:0, cooking:1, done:2, cancel:-1 };
-    const curIdx    = statusIdx[o.status] ?? 0;
+  const steps = [
+    { key:'pending', label: i18n.t('track.step.rcv')  },
+    { key:'cooking', label: i18n.t('track.step.cook') },
+    { key:'done',    label: i18n.t('track.step.done') },
+  ];
+  const statusIdx = { pending:0, cooking:1, done:2, cancel:-1 };
 
+  list.innerHTML = myOrders.map(o => {
+    const curIdx = statusIdx[o.status] ?? 0;
     const stepHTML = steps.map((s, i) => {
       const isDone   = i < curIdx;
       const isActive = i === curIdx && o.status !== 'cancel';
-      const dotClass = isDone ? 'done-dot' : isActive ? 'active' : '';
-      const lineClass = i < steps.length - 1 ? (isDone ? 'active' : '') : '';
-      return `
-        <div class="step">
-          <div class="step-dot ${dotClass}"></div>
-          <div class="step-lbl">${s.label}</div>
-        </div>
-        ${i < steps.length-1 ? `<div class="step-line ${lineClass}"></div>` : ''}`;
+      const dotCls   = isDone ? 'done-dot' : isActive ? 'active' : '';
+      const lineCls  = i < steps.length-1 ? (isDone ? 'active':'') : '';
+      return `<div class="step"><div class="step-dot ${dotCls}"></div><div class="step-lbl">${s.label}</div></div>
+              ${i < steps.length-1 ? `<div class="step-line ${lineCls}"></div>` : ''}`;
     }).join('');
 
     const statusLabel = {
-      pending: '⏳ ລໍຖ້າ',
-      cooking: '👨‍🍳 ກຳລັງປຸງ',
-      done:    '✅ ສຳເລັດ',
-      cancel:  '❌ ຍົກເລີກ',
-    }[o.status] || o.status;
+      pending: `⏳ ${i18n.t('status.pending')}`,
+      cooking: `👨‍🍳 ${i18n.t('status.cooking')}`,
+      done:    `✅ ${i18n.t('status.done')}`,
+      cancel:  `❌ ${i18n.t('status.cancel')}`,
+    }[o.status] || '';
 
-    const itemsText = o.items.map(i => `${i.emoji||''} ${i.name} ×${i.qty}`).join('  ·  ');
+    const itemsText = o.items.map(i => `${i.emoji||''} ${i.name} ×${i.qty}`).join(' · ');
 
     return `
       <div class="track-card status-${o.status}">
@@ -306,41 +338,121 @@ function renderTracking() {
         <div class="track-items">${itemsText}</div>
         <div class="track-footer">
           <div class="track-stepper">${stepHTML}</div>
-          <button class="bill-btn" onclick="openBill(${o.id})">🧾 ເບິ່ງບິນ</button>
+          <button class="bill-btn" onclick="openBill(${o.id})">🧾 ${i18n.t('track.bill')}</button>
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px 12px;border-top:1px solid var(--border)">
-          <span style="font-size:0.78rem;color:var(--muted)">
-            ${{pending:'⏳ ລໍຖ້າ',cooking:'👨‍🍳 ກຳລັງປຸງ',done:'✅ ສຳເລັດ',cancel:'❌ ຍົກເລີກ'}[o.status]||''}
-          </span>
-          <span style="font-weight:700;color:var(--accent2);font-size:0.9rem">${fmt(o.total)} ກີບ</span>
+          <span style="font-size:.78rem;color:var(--muted)">${statusLabel}</span>
+          <span style="font-weight:700;color:var(--accent2);font-size:.9rem">${fmt(o.total)} ${i18n.t('currency')}</span>
         </div>
       </div>`;
   }).join('');
 
-  // Session total
-  const grandTotal = myOrders.filter(o=>o.status!=='cancel').reduce((s,o)=>s+o.total, 0);
-  document.getElementById('sessionTotal').style.display = 'block';
-  document.getElementById('stVal').textContent = fmt(grandTotal) + ' ກີບ';
+  const grandTotal = myOrders.filter(o=>o.status!=='cancel').reduce((s,o)=>s+o.total,0);
+  const stEl = document.getElementById('sessionTotal');
+  stEl.style.display = 'block';
+  document.getElementById('sessionTotalLabel').textContent = i18n.t('track.session');
+  document.getElementById('stVal').textContent = fmt(grandTotal) + ' ' + i18n.t('currency');
 }
 
-// ── Header pill ────────────────────────────────────────────
+/* ── Header pill ──────────────────────────────────────── */
 function updateHeaderPill() {
-  const myTable  = getTableCode();
-  const active   = POS_DB.orders.getAll().filter(o =>
-    o.tableCode === myTable && (o.status === 'pending' || o.status === 'cooking')
-  );
-  const pill     = document.getElementById('orderStatusPill');
-  const pillText = document.getElementById('orderStatusText');
+  const myTable = getTableCode();
+  const active  = POS_DB.orders.getAll().filter(o => o.tableCode===myTable && (o.status==='pending'||o.status==='cooking'));
+  const pill    = document.getElementById('orderStatusPill');
+  const txt     = document.getElementById('orderStatusText');
   if (active.length) {
     pill.style.display = 'flex';
-    const cooking = active.filter(o => o.status === 'cooking').length;
-    pillText.textContent = cooking ? 'ກຳລັງປຸງ ' + cooking + ' ອໍ້ເດີ' : 'ລໍຖ້າ ' + active.length + ' ອໍ້ເດີ';
+    const cooking = active.filter(o=>o.status==='cooking').length;
+    txt.textContent = cooking
+      ? `${i18n.t('status.cooking')} ${cooking}`
+      : `${i18n.t('status.pending')} ${active.length}`;
   } else {
     pill.style.display = 'none';
   }
 }
 
-// ── Swipe sheet ────────────────────────────────────────────
+/* ── Bill modal ───────────────────────────────────────── */
+let _billOrderId   = null;
+let _selectedPay   = 'cash';
+
+function openBill(orderId) {
+  const order = POS_DB.orders.get(orderId);
+  if (!order) return;
+  _billOrderId = orderId;
+  const s = POS_DB.settings.get();
+
+  document.getElementById('billModalTitle').textContent = i18n.t('bill.title');
+  document.getElementById('billStoreName').textContent  = s.storeName || i18n.t('app.name');
+  document.getElementById('billStoreMeta').textContent  = (s.address||'') + (s.phone ? ' · '+s.phone : '');
+  document.getElementById('billTable').textContent     = order.tableCode;
+  document.getElementById('billOrderNum').textContent  = '#' + order.num;
+  document.getElementById('billTime').textContent      = order.time;
+  document.getElementById('billSubLabel').textContent  = i18n.t('bill.subtotal');
+  document.getElementById('billTotalLabel').textContent= i18n.t('bill.total');
+  document.getElementById('billSub').textContent       = fmt(order.subtotal) + ' ' + i18n.t('currency');
+  document.getElementById('billVat').textContent       = fmt(order.vatAmt)   + ' ' + i18n.t('currency');
+  document.getElementById('billTotal').textContent     = fmt(order.total)    + ' ' + i18n.t('currency');
+  document.getElementById('billFooterText').textContent= s.receiptFooter || i18n.t('bill.footer');
+
+  document.getElementById('billBody').innerHTML = order.items.map(i => `
+    <div class="bill-item">
+      <div class="bill-item-left">
+        <span class="bill-item-emoji">${i.emoji||'🍽️'}</span>
+        <div>
+          <div class="bill-item-name">${i.name}</div>
+          <div class="bill-item-qty">× ${i.qty} @ ${fmt(i.price)} ${i18n.t('currency')}</div>
+        </div>
+      </div>
+      <div class="bill-item-price">${fmt(i.price*i.qty)} ${i18n.t('currency')}</div>
+    </div>`).join('');
+
+  // Payment section labels
+  document.getElementById('billPayTitle').textContent = i18n.t('bill.pay.title');
+  document.getElementById('payOptCash').querySelector('span:last-child').textContent     = i18n.t('bill.pay.cash');
+  document.getElementById('payOptQr').querySelector('span:last-child').textContent       = i18n.t('bill.pay.qr');
+  document.getElementById('payOptTransfer').querySelector('span:last-child').textContent = i18n.t('bill.pay.transfer');
+  document.getElementById('qrScanLabel').textContent = i18n.t('bill.qr.scan');
+
+  const paySection = document.getElementById('billPaySection');
+  const statusArea = document.getElementById('billStatusArea');
+
+  if (order.status === 'done') {
+    paySection.style.display = 'none';
+    statusArea.innerHTML = `<div class="bill-status-tag">✅ ${i18n.t('bill.paid')} — ${payLabel(order.paymentMethod)}</div>`;
+  } else if (order.status === 'cancel') {
+    paySection.style.display = 'none';
+    statusArea.innerHTML = `<div class="bill-status-tag" style="background:rgba(231,76,60,.12);color:var(--red)">❌ ${i18n.t('status.cancel')}</div>`;
+  } else {
+    paySection.style.display = 'block';
+    statusArea.innerHTML = '';
+    _selectedPay = order.paymentMethod || 'cash';
+    document.querySelectorAll('.pay-opt').forEach(o => o.classList.toggle('selected', o.dataset.method===_selectedPay));
+    document.getElementById('qrBlock').classList.toggle('show', _selectedPay==='qr');
+  }
+
+  document.getElementById('billOverlay').classList.add('show');
+}
+
+function closeBill() { document.getElementById('billOverlay').classList.remove('show'); }
+function closeBillOnOverlay(e) { if(e.target===document.getElementById('billOverlay')) closeBill(); }
+
+function selectPayment(method, el) {
+  _selectedPay = method;
+  document.querySelectorAll('.pay-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('qrBlock').classList.toggle('show', method==='qr');
+  if (_billOrderId) {
+    const all = POS_DB.orders.getAll();
+    const o   = all.find(x => x.id === _billOrderId);
+    if (o) { o.paymentMethod = method; POS_DB.orders.save(all); }
+  }
+}
+
+function payLabel(m) {
+  return { cash: i18n.t('bill.pay.cash'), qr: i18n.t('bill.pay.qr'), transfer: i18n.t('bill.pay.transfer') }[m] || i18n.t('bill.pay.cash');
+}
+
+/* ── Swipe sheet ──────────────────────────────────────── */
 function setupSheetSwipe() {
   const sheet = document.getElementById('bottomSheet');
   let sy=0, st=0;
@@ -348,119 +460,12 @@ function setupSheetSwipe() {
   sheet.addEventListener('touchend',   e=>{if(e.changedTouches[0].clientY-sy>80&&Date.now()-st<400)closeCart();},{passive:true});
 }
 
-// ── Utils ──────────────────────────────────────────────────
-function cartSubtotal()  { return cart.reduce((s,c)=>s+c.price*c.qty,0); }
-function cartGrandTotal(){ const s=cartSubtotal(); return s+Math.round(s*(POS_DB.settings.getVat()/100)); }
-
-function fmt(n){ return Number(n).toLocaleString('lo-LA'); }
-
+/* ── Utils ────────────────────────────────────────────── */
+function cartSubtotal()   { return cart.reduce((s,c)=>s+c.price*c.qty,0); }
+function cartGrandTotal() { const s=cartSubtotal(); return s+Math.round(s*(POS_DB.settings.getVat()/100)); }
+function fmt(n) { return Number(n).toLocaleString('lo-LA'); }
 function showToast(msg, dur=2200) {
-  const wrap = document.getElementById('toastWrap');
-  const t    = document.createElement('div');
-  t.className   = 'toast';
-  t.textContent = msg;
-  wrap.appendChild(t);
-  setTimeout(()=>{ t.style.opacity='0'; t.style.transition='all .3s'; setTimeout(()=>t.remove(),300); }, dur);
-}
-
-/* ════════════════════════════════════════
-   BILL MODAL
-════════════════════════════════════════ */
-
-let currentBillOrderId = null;
-let selectedPayment    = 'cash';
-
-function openBill(orderId) {
-  const order = POS_DB.orders.get(orderId);
-  if (!order) return;
-  currentBillOrderId = orderId;
-
-  const s = POS_DB.settings.get();
-
-  // Store info
-  document.getElementById('billStoreName').textContent = s.storeName || 'ຮ້ານອາຫານລາວ';
-  document.getElementById('billStoreMeta').textContent =
-    (s.address || 'ວຽງຈັນ, ລາວ') + ' · ' + (s.phone || '—');
-
-  // Order info
-  document.getElementById('billTable').textContent    = order.tableCode;
-  document.getElementById('billOrderNum').textContent = '#' + order.num;
-  document.getElementById('billTime').textContent     = order.time;
-
-  // Items
-  document.getElementById('billBody').innerHTML = order.items.map(i => `
-    <div class="bill-item">
-      <div class="bill-item-left">
-        <span class="bill-item-emoji">${i.emoji || '🍽️'}</span>
-        <div>
-          <div class="bill-item-name">${i.name}</div>
-          <div class="bill-item-qty">× ${i.qty} &nbsp;@&nbsp; ${fmt(i.price)} ກີບ</div>
-        </div>
-      </div>
-      <div class="bill-item-price">${fmt(i.price * i.qty)} ກີບ</div>
-    </div>`).join('');
-
-  // Summary
-  document.getElementById('billSub').textContent   = fmt(order.subtotal) + ' ກີບ';
-  document.getElementById('billVat').textContent   = fmt(order.vatAmt)   + ' ກີບ';
-  document.getElementById('billTotal').textContent = fmt(order.total)    + ' ກີບ';
-
-  // Payment section — show only for non-done orders
-  const paySection = document.getElementById('billPaySection');
-  const statusArea = document.getElementById('billStatusArea');
-  const footerText = document.getElementById('billFooterText');
-
-  if (order.status === 'done') {
-    // Paid — show done badge, hide payment picker
-    paySection.style.display = 'none';
-    statusArea.innerHTML = `
-      <div class="bill-status-tag">✅ ຊຳລະແລ້ວ — ${payMethodLabel(order.paymentMethod)}</div>`;
-    footerText.textContent = s.receiptFooter || 'ຂໍຂອບໃຈທີ່ໃຊ້ບໍລິການ 🙏';
-  } else if (order.status === 'cancel') {
-    paySection.style.display = 'none';
-    statusArea.innerHTML = `<div class="bill-status-tag" style="background:rgba(231,76,60,.12);color:var(--red);border-color:rgba(231,76,60,.3)">❌ ຍົກເລີກ</div>`;
-    footerText.textContent = '';
-  } else {
-    // Pending / cooking — show payment picker
-    paySection.style.display = 'block';
-    statusArea.innerHTML = '';
-    // Reset selection UI
-    document.querySelectorAll('.pay-opt').forEach(o => {
-      o.classList.toggle('selected', o.dataset.method === selectedPayment);
-    });
-    updateQrBlock();
-  }
-
-  document.getElementById('billOverlay').classList.add('show');
-}
-
-function closeBill() {
-  document.getElementById('billOverlay').classList.remove('show');
-  currentBillOrderId = null;
-}
-
-function closeBillOnOverlay(e) {
-  if (e.target === document.getElementById('billOverlay')) closeBill();
-}
-
-function selectPayment(method, el) {
-  selectedPayment = method;
-  document.querySelectorAll('.pay-opt').forEach(o => o.classList.remove('selected'));
-  el.classList.add('selected');
-  updateQrBlock();
-
-  // Persist payment method to order
-  if (currentBillOrderId) {
-    const orders = POS_DB.orders.getAll();
-    const o = orders.find(x => x.id === currentBillOrderId);
-    if (o) { o.paymentMethod = method; POS_DB.orders.save(orders); }
-  }
-}
-
-function updateQrBlock() {
-  document.getElementById('qrBlock').classList.toggle('show', selectedPayment === 'qr');
-}
-
-function payMethodLabel(m) {
-  return { cash:'ເງິນສົດ', qr:'QR Code', transfer:'ໂອນເງິນ' }[m] || m || 'ເງິນສົດ';
+  const w=document.getElementById('toastWrap'), t=document.createElement('div');
+  t.className='toast'; t.textContent=msg; w.appendChild(t);
+  setTimeout(()=>{ t.style.opacity='0'; t.style.transition='all .3s'; setTimeout(()=>t.remove(),300); },dur);
 }

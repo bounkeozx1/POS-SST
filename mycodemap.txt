@@ -1,5 +1,6 @@
 pos/
 ├── db.js            ← ✨ ใหม่: shared data layer
+├── i18n.js          ← ✨ ໃໝ່: ລະບົບແປພາສາ
 ├── index.html       ← โหลด db.js + script.js
 ├── style.css
 ├── script.js        ← ✨ อัปเดต: ใช้ POS_DB

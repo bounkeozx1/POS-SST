@@ -103,6 +103,36 @@ function doLogin() {
   document.getElementById('sbAvatar').textContent   = user.name[0].toUpperCase();
   document.getElementById('tbAvatar').textContent   = user.name[0].toUpperCase();
 
+  // Build language switcher in topbar
+  const mount = document.getElementById('langMount');
+  if (mount && !mount.hasChildNodes()) {
+    i18n.buildSwitcher(mount);
+  }
+
+  // Re-render on language change
+  window.addEventListener('langchange', () => {
+    const active = document.querySelector('.page.active');
+    if (active) {
+      const page = active.id.replace('page-', '');
+      switch(page) {
+        case 'dashboard':  renderDashboard();   break;
+        case 'orders':     renderOrdersPage();  break;
+        case 'products':   renderProductsPage();break;
+        case 'inventory':  renderInventoryPage();break;
+        case 'reports':    renderReportsPage(); break;
+        case 'users':      renderUsersPage();   break;
+      }
+      // Update breadcrumb title
+      const info = pageMap[page];
+      if (info) document.getElementById('tbTitle').textContent = i18n.t(info.key || 'admin.dashboard');
+    }
+    // Update sidebar nav labels
+    document.querySelectorAll('.sb-item[data-page]').forEach(btn => {
+      const labelEl = btn.querySelector('.sb-label');
+      if (labelEl && labelEl.dataset.i18n) labelEl.textContent = i18n.t(labelEl.dataset.i18n);
+    });
+  });
+
   navTo('dashboard', null);
   startClock();
   updateOrderBadge();
@@ -125,13 +155,13 @@ function togglePw() {
 // 3. NAVIGATION
 // ════════════════════════════════
 const pageMap = {
-  dashboard: { icon:'📊', title:'Dashboard' },
-  orders:    { icon:'📦', title:'คำสั่งซื้อ' },
-  products:  { icon:'🍽️', title:'สินค้า / เมนู' },
-  inventory: { icon:'📋', title:'สต็อกสินค้า' },
-  reports:   { icon:'📈', title:'รายงาน' },
-  users:     { icon:'👥', title:'ผู้ใช้งาน' },
-  settings:  { icon:'⚙️', title:'ตั้งค่า' },
+  dashboard: { icon:'📊', title:'Dashboard',      i18nKey:'admin.dashboard' },
+  orders:    { icon:'📦', title:'คำสั่งซื้อ',      i18nKey:'admin.orders'    },
+  products:  { icon:'🍽️', title:'สินค้า / เมนู',  i18nKey:'admin.products'  },
+  inventory: { icon:'📋', title:'สต็อกสินค้า',     i18nKey:'admin.inventory' },
+  reports:   { icon:'📈', title:'รายงาน',           i18nKey:'admin.reports'   },
+  users:     { icon:'👥', title:i18n.t('admin.users'),        i18nKey:'admin.users'     },
+  settings:  { icon:'⚙️', title:'ตั้งค่า',          i18nKey:'admin.settings'  },
 };
 
 function navTo(page, el) {
@@ -152,7 +182,7 @@ function navTo(page, el) {
   // Update topbar
   const info = pageMap[page] || { icon:'⚡', title: page };
   document.getElementById('tbIcon').textContent  = info.icon;
-  document.getElementById('tbTitle').textContent = info.title;
+  document.getElementById('tbTitle').textContent = i18n.t(info.key || 'admin.dashboard');
 
   // Scroll to top
   document.getElementById('pageContent').scrollTo({ top: 0, behavior: 'smooth' });
@@ -225,10 +255,10 @@ function renderDashboard() {
 
   // KPI
   const kpiGrid = document.getElementById('kpiGrid');
-  kpiGrid.innerHTML = kpiCard('💰', fmt(todayRev), 'ยอดขายวันนี้ (ກີບ)', '+12%', 'up')
-    + kpiCard('📦', orders.length, 'ออร์เดอร์ทั้งหมด', pending + ' รอดำเนินการ', 'neu', true)
-    + kpiCard('🍽️', DB.products.filter(p=>p.status==='active').length, 'สินค้าที่ขาย', lowStock + ' ใกล้หมด', lowStock > 0 ? 'down' : 'neu')
-    + kpiCard('👥', DB.users.filter(u=>u.status==='active').length, 'ผู้ใช้งาน', 'Active', 'up');
+  kpiGrid.innerHTML = kpiCard('💰', fmt(todayRev), i18n.t('rep.revenue'), '+12%', 'up')
+    + kpiCard('📦', orders.length, i18n.t('dash.orders'), pending + ' ' + i18n.t('status.pending'), 'neu', true)
+    + kpiCard('🍽️', POS_DB.products.getAll().filter(p=>p.status==='active').length, i18n.t('admin.products'), lowStock + ' ' + i18n.t('products.status'), lowStock > 0 ? 'down' : 'neu')
+    + kpiCard('👥', POS_DB.users.getAll().filter(u=>u.status==='active').length, i18n.t('admin.users'), 'Active', 'up');
 
   // Recent orders table
   const recent = orders.slice(0, 8);
@@ -493,7 +523,7 @@ function orderTableHead() {
 
 function orderRow(o) {
   const badge = o.status === 'done' ? 'badge-green' : o.status === 'cancel' ? 'badge-red' : 'badge-yellow';
-  const label = o.status === 'done' ? '✅ สำเร็จ' : o.status === 'cancel' ? '❌ ยกเลิก' : '⏳ รอ';
+  const label = o.status === 'done' ? `✅ ${i18n.t('status.done')}` : o.status === 'cancel' ? `❌ ${i18n.t('status.cancel')}` : `⏳ ${i18n.t('status.pending')}`;
   return `<tr>
     <td><b class="mono">#${o.num}</b></td>
     <td><span class="badge badge-blue">${o.table}</span></td>
@@ -577,13 +607,13 @@ function renderProductsPage() {
   });
 
   const statusBadge = s => {
-    if (s === 'active')  return '<span class="badge badge-green">✅ ขาย</span>';
-    if (s === 'soldout') return '<span class="badge badge-red">❌ หมด</span>';
-    return '<span class="badge badge-gray">🚫 ซ่อน</span>';
+    if (s === 'active')  return `<span class="badge badge-green">✅ ${i18n.t('products.active')}</span>`;
+    if (s === 'soldout') return `<span class="badge badge-red">❌ ${i18n.t('products.soldout')}</span>`;
+    return `<span class="badge badge-gray">🚫 ${i18n.t('products.hidden')}</span>`;
   };
   const catLabel = { rice:'🍚 ข้าว', noodle:'🍜 เฝอ', grill:'🔥 ปิ้ง', drink:'🥤 ดื่ม', dessert:'🍮 หวาน' };
 
-  const thead = `<thead><tr><th>สินค้า</th><th>หมวด</th><th>ราคา</th><th>สต็อก</th><th>สถานะ</th><th>จัดการ</th></tr></thead>`;
+  const thead = `<thead><tr><th>${i18n.t('products.name')}</th><th>${i18n.t('products.cat')}</th><th>${i18n.t('products.price')}</th><th>${i18n.t('products.stock')}</th><th>${i18n.t('products.status')}</th><th>${i18n.t('orders.manage')}</th></tr></thead>`;
   const tbody = `<tbody>${filtered.map(p => `<tr>
     <td><div style="display:flex;align-items:center;gap:10px">
       <span style="font-size:1.5rem">${p.emoji}</span>
@@ -668,7 +698,7 @@ function renderInventoryPage() {
   }
 
   // Stock table
-  const thead = `<thead><tr><th>สินค้า</th><th>หมวด</th><th>สต็อก</th><th>สถานะ</th><th>จัดการ</th></tr></thead>`;
+  const thead = `<thead><tr><th>${i18n.t('products.name')}</th><th>${i18n.t('products.cat')}</th><th>${i18n.t('products.stock')}</th><th>${i18n.t('products.status')}</th><th>${i18n.t('orders.manage')}</th></tr></thead>`;
   const catLabel = { rice:'ข้าว', noodle:'เฝอ', grill:'ปิ้ง', drink:'ดื่ม', dessert:'หวาน' };
   const tbody = `<tbody>${DB.products.map(p => {
     const lvl = p.stock <= 0 ? 'badge-red' : p.stock <= 5 ? 'badge-yellow' : p.stock <= 20 ? 'badge-blue' : 'badge-green';
@@ -683,7 +713,7 @@ function renderInventoryPage() {
           </div>
         </div>
       </td>
-      <td>${p.status === 'active' ? '<span class="badge badge-green">✅ ขาย</span>' : '<span class="badge badge-red">❌ หมด</span>'}</td>
+      <td>${p.status === 'active' ? `<span class="badge badge-green">✅ ${i18n.t('products.active')}</span>` : `<span class="badge badge-red">❌ ${i18n.t('products.soldout')}</span>`}</td>
       <td><button class="tbl-btn" onclick="quickStock(${p.id})">📦 ปรับ</button></td>
     </tr>`;
   }).join('')}</tbody>`;
@@ -756,8 +786,8 @@ function renderReportsPage() {
 
   document.getElementById('reportKpi').innerHTML =
     kpiCard('💰', fmt(revenue), 'ยอดขายทั้งหมด (ກີບ)', '', 'neu', true)
-    + kpiCard('📦', count, 'ออร์เดอร์สำเร็จ', '', 'up')
-    + kpiCard('📊', fmt(avg), 'เฉลี่ยต่อออร์เดอร์', 'ກີບ', 'neu')
+    + kpiCard('📦', count, i18n.t('rep.orders'), '', 'up')
+    + kpiCard('📊', fmt(avg), i18n.t('rep.avg'), 'ກີບ', 'neu')
     + kpiCard('🏆', top ? top[0] : '—', 'สินค้าขายดี', top ? top[1]+' ครั้ง' : '', 'up');
 
   // Table
@@ -791,8 +821,8 @@ function exportCSV() {
 // 12. USERS PAGE
 // ════════════════════════════════
 function renderUsersPage() {
-  const roleLabel = { admin:'⚡ Super Admin', manager:'👔 ผู้จัดการ', cashier:'🏪 พนักงาน' };
-  const thead = `<thead><tr><th>ผู้ใช้</th><th>Username</th><th>บทบาท</th><th>สถานะ</th><th>Last Login</th><th>จัดการ</th></tr></thead>`;
+  const roleLabel = { admin:`⚡ ${i18n.t('users.role.admin')}`, manager:`👔 ${i18n.t('users.role.mgr')}`, cashier:`🏪 ${i18n.t('users.role.cash')}` };
+  const thead = `<thead><tr><th>${i18n.t('admin.users')}</th><th>${i18n.t('users.username')}</th><th>${i18n.t('users.role')}</th><th>${i18n.t('products.status')}</th><th>${i18n.t('users.last.login')}</th><th>${i18n.t('orders.manage')}</th></tr></thead>`;
   const tbody = `<tbody>${DB.users.map(u => `<tr>
     <td><div style="display:flex;align-items:center;gap:10px">
       <div style="width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--blue),#1a252f);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem;flex-shrink:0">${u.name[0]}</div>
@@ -800,7 +830,7 @@ function renderUsersPage() {
     </div></td>
     <td style="font-family:'DM Mono',monospace;font-size:0.82rem;color:var(--text2)">${u.username}</td>
     <td><span class="badge badge-blue">${roleLabel[u.role]||u.role}</span></td>
-    <td>${u.status==='active'?'<span class="badge badge-green">✅ ใช้งาน</span>':'<span class="badge badge-red">🚫 ระงับ</span>'}</td>
+    <td>${u.status==='active'?`<span class="badge badge-green">✅ ${i18n.t('users.active')}</span>`:`<span class="badge badge-red">🚫 ${i18n.t('users.inactive')}</span>`}</td>
     <td style="color:var(--muted);font-size:0.78rem">${u.lastLogin}</td>
     <td><div class="tbl-actions">
       <button class="tbl-btn" onclick="openUserModal(${u.id})">✏️</button>
