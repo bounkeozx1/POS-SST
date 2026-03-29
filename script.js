@@ -3,6 +3,25 @@
    Requires: i18n.js → db.js → script.js  */
 
 let cart = [], currentCat = 'all', searchQuery = '';
+
+/* ── Multilingual helpers ──────────────────────────────────
+   Menu items store name/desc as { lo, th, en, zh } objects.
+   Falls back to string if stored as plain string (old data).
+   ────────────────────────────────────────────────────────── */
+function localName(item) {
+  if (!item) return '';
+  if (typeof item.name === 'object') {
+    return item.name[i18n.getLang()] || item.name.lo || item.name.en || '';
+  }
+  return item.name || '';
+}
+function localDesc(item) {
+  if (!item) return '';
+  if (typeof item.desc === 'object') {
+    return item.desc[i18n.getLang()] || item.desc.lo || item.desc.en || '';
+  }
+  return item.desc || '';
+}
 const catKeys = { all:'cat.all', rice:'cat.rice', noodle:'cat.noodle', grill:'cat.grill', drink:'cat.drink', dessert:'cat.dessert' };
 const catIcons = { all:'🍽️ ', rice:'🍚 ', noodle:'🍜 ', grill:'🔥 ', drink:'🥤 ', dessert:'🍮 ' };
 
@@ -13,6 +32,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 2. When language changes: re-render all dynamic UI
   window.addEventListener('langchange', () => {
+    // Refresh cart item displayNames to new language
+    const allProducts = POS_DB.products.getAll();
+    cart.forEach(c => {
+      const p = allProducts.find(p => p.id === c.id);
+      if (p) c.displayName = localName(p);
+    });
     renderCatPills();
     renderMenu();
     renderSheet();
@@ -101,7 +126,13 @@ function renderMenu() {
   const grid     = document.getElementById('menuGrid');
   const filtered = POS_DB.products.getAll().filter(item => {
     const mc = currentCat === 'all' || item.cat === currentCat;
-    const ms = !searchQuery || item.name.toLowerCase().includes(searchQuery) || item.desc.toLowerCase().includes(searchQuery);
+    // Search across ALL language names so user can type in any language
+    const nm = localName(item).toLowerCase();
+    const dm = localDesc(item).toLowerCase();
+    const fallbacks = typeof item.name === 'object'
+      ? Object.values(item.name).join(' ').toLowerCase()
+      : (item.name||'').toLowerCase();
+    const ms = !searchQuery || nm.includes(searchQuery) || dm.includes(searchQuery) || fallbacks.includes(searchQuery);
     return mc && ms;
   });
 
@@ -119,8 +150,8 @@ function renderMenu() {
         <div class="card-qty-badge${qty>0?' show':''}" id="badge-${item.id}">${qty}</div>
         <div class="menu-emoji">${item.emoji}</div>
         <div class="menu-body">
-          <div class="menu-name">${item.name}</div>
-          <div class="menu-desc">${item.desc}</div>
+          <div class="menu-name">${localName(item)}</div>
+          <div class="menu-desc">${localDesc(item)}</div>
           <div class="menu-footer">
             <div class="menu-price">${fmt(item.price)} <small>${i18n.t('currency')}</small></div>
             ${isSold
@@ -146,12 +177,21 @@ function addToCart(id) {
   if (ex) {
     if (ex.qty >= item.stock) { showToast('⚠️ ' + i18n.t('order.soldout')); return; }
     ex.qty++;
+    // Update display name if language changed since item was added
+    ex.displayName = localName(item);
   } else {
-    cart.push({ id:item.id, name:item.name, price:item.price, emoji:item.emoji, qty:1 });
+    cart.push({
+      id:    item.id,
+      name:  item.name,          // keep raw (multilingual object) for re-renders
+      displayName: localName(item), // current-language display string
+      price: item.price,
+      emoji: item.emoji,
+      qty:   1
+    });
   }
   updateCartBadge(id);
   updateCartBar();
-  showToast('✅ ' + item.name);
+  showToast('✅ ' + localName(item));
 }
 
 function changeQty(id, delta) {
@@ -246,7 +286,7 @@ function renderSheet() {
     <div class="cart-item">
       <div class="ci-emoji">${c.emoji}</div>
       <div class="ci-info">
-        <div class="ci-name">${c.name}</div>
+        <div class="ci-name">${c.displayName || localName({name:c.name})}</div>
         <div class="ci-price">${fmt(c.price * c.qty)} ${i18n.t('currency')}</div>
       </div>
       <div class="ci-ctrl">
@@ -271,7 +311,7 @@ function placeOrder() {
   const order = POS_DB.orders.create({
     tableCode:     getTableCode(),
     tableId:       getTableId(),
-    items:         cart.map(c => ({id:c.id,name:c.name,price:c.price,qty:c.qty,emoji:c.emoji})),
+    items:         cart.map(c => ({id:c.id,name:c.displayName||localName({name:c.name}),price:c.price,qty:c.qty,emoji:c.emoji})),
     paymentMethod: 'cash',
   });
   document.getElementById('modalNum').textContent   = '#' + order.num;

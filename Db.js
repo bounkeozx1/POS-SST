@@ -23,20 +23,21 @@ const POS_DB = (() => {
   // ── Default Data ──────────────────────────────────────────
   const DEFAULTS = {
     products: [
-      { id:1,  name:'ຂ້າວໜຽວ',  desc:'ຂ້າວໜຽວຫຸງສຸກ',      price:5000,  cat:'rice',    emoji:'🍚', stock:99, status:'active'  },
-      { id:2,  name:'ຂ້າວຜັດ',   desc:'ຜັດໄຂ່ ຜັກ ສົດ',     price:35000, cat:'rice',    emoji:'🍳', stock:50, status:'active'  },
-      { id:3,  name:'ຂ້າວໝູ',    desc:'ຂ້າວໝູແດງ ຊອດ',       price:30000, cat:'rice',    emoji:'🥩', stock:40, status:'active'  },
-      { id:4,  name:'ລາບໝູ',     desc:'ດິບ / ສຸກ',           price:40000, cat:'rice',    emoji:'🥗', stock:30, status:'active'  },
-      { id:5,  name:'ຕົ້ມຍຳ',    desc:'ກຸ້ງ ເຜັດຮ້ອນ',        price:50000, cat:'rice',    emoji:'🦐', stock:25, status:'active'  },
-      { id:6,  name:'ເຝີໄກ່',    desc:'ນ້ຳສຸບໄກ່ ເສັ້ນໃຫຍ່',  price:25000, cat:'noodle',  emoji:'🍜', stock:35, status:'active'  },
-      { id:7,  name:'ກ໋ວຍຈັ໊ບ',  desc:'ເສັ້ນໃຫຍ່ ໝູ ໄຂ່',    price:30000, cat:'noodle',  emoji:'🍲', stock:5,  status:'active'  },
-      { id:8,  name:'ໄກ່ຍ່າງ',   desc:'ໄກ່ຍ່າງຟືນ ຊອດ',      price:45000, cat:'grill',   emoji:'🍗', stock:20, status:'active'  },
-      { id:9,  name:'ປາຕົ້ມ',    desc:'ເຄື່ອງຈ້ຳ ຫອມ',       price:60000, cat:'grill',   emoji:'🐟', stock:3,  status:'soldout' },
-      { id:10, name:'ເບຍລາວ',    desc:'ຂວດ 640ml ເຢັນ',       price:20000, cat:'drink',   emoji:'🍺', stock:80, status:'active'  },
-      { id:11, name:'ນ້ຳໝາກໄມ້', desc:'ສົ້ມ / ໝາກນາວ ເຢັນ',  price:15000, cat:'drink',   emoji:'🧃', stock:60, status:'active'  },
-      { id:12, name:'ນ້ຳດ່ຽວ',   desc:'ນ້ຳເຢັນ 600ml',         price:5000,  cat:'drink',   emoji:'💧', stock:100,status:'active'  },
-      { id:13, name:'ຂ້າວໜົມ',   desc:'ຂ້າວໜົມຫໍ່ ງາ',        price:8000,  cat:'dessert', emoji:'🍡', stock:15, status:'active'  },
-      { id:14, name:'ຂ້າວຕ້ົ',   desc:'ຂ້າວຕ້ົ ໝາກໂກ',        price:12000, cat:'dessert', emoji:'🧆', stock:0,  status:'soldout' },
+      // name/desc are multilingual objects: { lo, th, en, zh }
+      { id:1,  name:{lo:'ຂ້າວໜຽວ',  th:'ข้าวเหนียว',  en:'Sticky Rice',    zh:'糯米饭'   }, desc:{lo:'ຂ້າວໜຽວຫຸງສຸກ',     th:'ข้าวเหนียวหุงสุก',    en:'Steamed sticky rice',     zh:'蒸糯米饭'      }, price:5000,  cat:'rice',    emoji:'🍚', stock:99,  status:'active'  },
+      { id:2,  name:{lo:'ຂ້າວຜັດ',   th:'ข้าวผัด',     en:'Fried Rice',     zh:'炒饭'     }, desc:{lo:'ຜັດໄຂ່ ຜັກ ສົດ',    th:'ผัดไข่ ผัก สด',       en:'Egg & vegetable fried rice',zh:'鸡蛋蔬菜炒饭'  }, price:35000, cat:'rice',    emoji:'🍳', stock:50,  status:'active'  },
+      { id:3,  name:{lo:'ຂ້າວໝູ',    th:'ข้าวหมู',     en:'Pork Rice',      zh:'猪肉饭'   }, desc:{lo:'ຂ້າວໝູແດງ ຊອດ',     th:'ข้าวหมูแดง ซอส',      en:'BBQ pork over rice',      zh:'叉烧饭配酱汁'  }, price:30000, cat:'rice',    emoji:'🥩', stock:40,  status:'active'  },
+      { id:4,  name:{lo:'ລາບໝູ',     th:'ลาบหมู',      en:'Pork Laab',      zh:'猪肉拉帕' }, desc:{lo:'ດິບ / ສຸກ',          th:'ดิบ / สุก',           en:'Raw or cooked style',     zh:'生/熟皆可'     }, price:40000, cat:'rice',    emoji:'🥗', stock:30,  status:'active'  },
+      { id:5,  name:{lo:'ຕົ້ມຍຳ',    th:'ต้มยำ',       en:'Tom Yum',        zh:'冬阴功'   }, desc:{lo:'ກຸ້ງ ເຜັດຮ້ອນ',       th:'กุ้ง เผ็ดร้อน',       en:'Spicy shrimp soup',       zh:'辣虾汤'        }, price:50000, cat:'rice',    emoji:'🦐', stock:25,  status:'active'  },
+      { id:6,  name:{lo:'ເຝີໄກ່',    th:'เฝอไก่',      en:'Chicken Pho',    zh:'鸡肉河粉' }, desc:{lo:'ນ້ຳສຸບໄກ່ ເສັ້ນໃຫຍ່', th:'น้ำซุปไก่ เส้นใหญ่',  en:'Chicken broth noodle soup',zh:'鸡汤宽粉'      }, price:25000, cat:'noodle',  emoji:'🍜', stock:35,  status:'active'  },
+      { id:7,  name:{lo:'ກ໋ວຍຈັ໊ບ',  th:'ก๋วยจั๊บ',   en:'Kuay Jab',       zh:'卷粉汤'   }, desc:{lo:'ເສັ້ນໃຫຍ່ ໝູ ໄຂ່',    th:'เส้นใหญ่ หมู ไข่',    en:'Wide noodle pork soup',   zh:'宽粉猪肉汤'    }, price:30000, cat:'noodle',  emoji:'🍲', stock:5,   status:'active'  },
+      { id:8,  name:{lo:'ໄກ່ຍ່າງ',   th:'ไก่ย่าง',    en:'Grilled Chicken',zh:'烤鸡'     }, desc:{lo:'ໄກ່ຍ່າງຟືນ ຊອດ',      th:'ไก่ย่างฟืน ซอส',      en:'Wood-fired grilled chicken',zh:'柴火烤鸡配酱汁'}, price:45000, cat:'grill',   emoji:'🍗', stock:20,  status:'active'  },
+      { id:9,  name:{lo:'ປາຕົ້ມ',    th:'ปาต้ม',       en:'Steamed Fish',   zh:'清蒸鱼'   }, desc:{lo:'ເຄື່ອງຈ້ຳ ຫອມ',       th:'เครื่องจ้ำ หอม',      en:'Steamed fish with herbs', zh:'香草蒸鱼'      }, price:60000, cat:'grill',   emoji:'🐟', stock:3,   status:'soldout' },
+      { id:10, name:{lo:'ເບຍລາວ',    th:'เบียลาว',     en:'Beerlao',        zh:'老挝啤酒' }, desc:{lo:'ຂວດ 640ml ເຢັນ',       th:'ขวด 640ml เย็น',      en:'640ml bottle chilled',    zh:'640ml冰镇瓶装'  }, price:20000, cat:'drink',   emoji:'🍺', stock:80,  status:'active'  },
+      { id:11, name:{lo:'ນ້ຳໝາກໄມ້', th:'น้ำผลไม้',   en:'Fruit Juice',    zh:'果汁'     }, desc:{lo:'ສົ້ມ / ໝາກນາວ ເຢັນ',  th:'ส้ม / มะนาว เย็น',   en:'Orange / lime, chilled',  zh:'橙汁/柠檬汁冰镇'}, price:15000, cat:'drink',   emoji:'🧃', stock:60,  status:'active'  },
+      { id:12, name:{lo:'ນ້ຳດ່ຽວ',   th:'น้ำดื่ม',     en:'Water',          zh:'饮用水'   }, desc:{lo:'ນ້ຳເຢັນ 600ml',         th:'น้ำเย็น 600ml',       en:'Cold water 600ml',        zh:'冰水600ml'     }, price:5000,  cat:'drink',   emoji:'💧', stock:100, status:'active'  },
+      { id:13, name:{lo:'ຂ້າວໜົມ',   th:'ข้าวหนม',    en:'Rice Cake',      zh:'米糕'     }, desc:{lo:'ຂ້າວໜົມຫໍ່ ງາ',        th:'ข้าวหนมห่อ งา',       en:'Wrapped rice cake, sesame',zh:'芝麻糯米糕'    }, price:8000,  cat:'dessert', emoji:'🍡', stock:15,  status:'active'  },
+      { id:14, name:{lo:'ຂ້າວຕ້ົ',   th:'ข้าวต้ม',    en:'Rice Porridge',  zh:'米粥'     }, desc:{lo:'ຂ້າວຕ້ົ ໝາກໂກ',        th:'ข้าวต้ม มะพร้าว',     en:'Coconut rice porridge',   zh:'椰汁米粥'      }, price:12000, cat:'dessert', emoji:'🧆', stock:0,   status:'soldout' },
     ],
     orders:   [],
     stockLog: [],
@@ -78,6 +79,16 @@ const POS_DB = (() => {
 
   // Initialise all stores with defaults if not present
   function bootstrap() {
+    // Check if stored products still use old string-only format
+    // If so, wipe and re-seed with multilingual format
+    const stored = load(KEY.products);
+    if (stored && stored.length > 0) {
+      const firstItem = stored[0];
+      if (typeof firstItem.name === 'string') {
+        // Old format detected — reset to multilingual defaults
+        save(KEY.products, DEFAULTS.products);
+      }
+    }
     Object.entries(DEFAULTS).forEach(([k, v]) => init(KEY[k], v));
   }
 
