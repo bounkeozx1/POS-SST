@@ -165,10 +165,23 @@ function changeQty(id, delta) {
 }
 
 function clearCart() {
+  // Save scroll position before any DOM changes
+  const mc   = document.getElementById('mainContent');
+  const savedScroll = mc ? mc.scrollTop : 0;
+
   cart.forEach(c => updateCartBadge(c.id, 0));
   cart = [];
-  updateCartBar();
-  renderSheet();
+
+  // Close the sheet first (avoids DOM-in-sheet causing scroll)
+  closeCart();
+
+  // Update after sheet starts closing (rAF = after paint)
+  requestAnimationFrame(() => {
+    updateCartBar();
+    renderSheet();
+    // Restore scroll position
+    if (mc) mc.scrollTop = savedScroll;
+  });
 }
 
 function updateCartBadge(id, fq = null) {
@@ -182,8 +195,24 @@ function updateCartBadge(id, fq = null) {
 function updateCartBar() {
   const bar = document.getElementById('cartBar');
   const qty = cart.reduce((s,c) => s+c.qty, 0);
-  if (!qty) { bar.style.display = 'none'; return; }
-  bar.style.display = 'flex';
+
+  if (!qty) {
+    // Hide: remove class so animation won't re-fire next time we show
+    bar.classList.remove('cart-bar-show');
+    bar.style.display = 'none';
+    return;
+  }
+
+  // Only trigger display + animation once (first appearance)
+  const wasHidden = bar.style.display === 'none' || bar.style.display === '';
+  if (wasHidden) {
+    bar.style.display = 'flex';
+    // Force reflow so animation restarts cleanly from correct position
+    void bar.offsetWidth;
+    bar.classList.add('cart-bar-show');
+  }
+
+  // Always update text content (no layout change = no jump)
   document.getElementById('cartBarQty').textContent   = qty;
   document.getElementById('cartBarTotal').textContent = fmt(cartGrandTotal()) + ' ' + i18n.t('currency');
   document.getElementById('cartBarMid').textContent   = i18n.t('cart.view');

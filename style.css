@@ -402,7 +402,11 @@ button,.cat-pill,.add-btn,.ci-btn,.confirm-btn,.clear-btn,.nav-item,
   display:flex;align-items:center;justify-content:space-between;
   cursor:pointer;z-index:99;
   box-shadow:0 6px 28px rgba(232,98,26,.55),0 2px 8px rgba(232,98,26,.3);
-  animation:cartSlide .32s cubic-bezier(.34,1.56,.64,1);
+  /* NO animation here — only fires on .cart-bar-show to prevent re-animation on every item add */
+}
+/* Animation triggers ONLY when first appearing (class added by JS) */
+.cart-bar.cart-bar-show{
+  animation:cartSlide .32s cubic-bezier(.34,1.56,.64,1) both;
 }
 @keyframes cartSlide{from{opacity:0;transform:translateY(28px) scale(.9)}to{opacity:1;transform:translateY(0) scale(1)}}
 .cart-bar:active{transform:scale(.97);opacity:.9}
@@ -720,12 +724,13 @@ button,.cat-pill,.add-btn,.ci-btn,.confirm-btn,.clear-btn,.nav-item,
   .menu-grid{grid-template-columns:repeat(3,1fr)}
   .bottom-sheet{max-width:480px;left:50%;right:auto;transform:translateX(-50%) translateY(100%)}
   .bottom-sheet.open{transform:translateX(-50%) translateY(0)}
-  .cart-bar{max-width:480px;left:50%;right:auto;transform:translateX(-50%)}
+  .cart-bar{max-width:480px;left:50%;right:auto;margin-left:-240px}
+  /* Use margin instead of transform so animation translateY doesn't conflict */
   .bill-sheet{max-width:480px;left:50%;right:auto;margin:0 auto}
 }
 @media(min-width:900px){
   .main-content{max-width:860px;margin:0 auto}
   .menu-grid{grid-template-columns:repeat(4,1fr)}
   .top-header,.bottom-nav{max-width:860px;left:50%;transform:translateX(-50%)}
-  .cart-bar{max-width:600px}
+  .cart-bar{max-width:600px;margin-left:-300px}
 }
