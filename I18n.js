@@ -1,5 +1,6 @@
 /* ============================================================
    i18n.js — Language System (ລາວ | ไทย | English | 中文)
+   v2 — supports multiple switcher instances (login + topbar)
    ============================================================ */
 const i18n = (() => {
   const LANGS = [
@@ -8,6 +9,7 @@ const i18n = (() => {
     { code:'en', label:'EN',  flag:'🇬🇧' },
     { code:'zh', label:'中文',flag:'🇨🇳' },
   ];
+
   const T = {
     'app.name':          { lo:'ຮ້ານອາຫານລາວ',    th:'ร้านอาหารลาว',      en:'Lao Restaurant',    zh:'老挝餐厅'   },
     'btn.save':          { lo:'ບັນທຶກ',            th:'บันทึก',             en:'Save',              zh:'保存'       },
@@ -122,8 +124,12 @@ const i18n = (() => {
     'user.lastlogin':    { lo:'ເຂົ້າລ່າສຸດ',        th:'เข้าล่าสุด',         en:'Last Login',        zh:'最近登录'   },
     'user.active':       { lo:'ໃຊ້ງານ',            th:'ใช้งาน',             en:'Active',            zh:'启用'       },
     'user.inactive':     { lo:'ລະງັບ',             th:'ระงับ',              en:'Inactive',          zh:'停用'       },
-    'login.btn':         { lo:'ເຂົ້າສູ່ລະບົບ',      th:'เข้าสู่ระบบ',        en:'Sign In',           zh:'登录'       },
+    'login.title':       { lo:'ເຂົ້າສູ່ລະບົບ',     th:'เข้าสู่ระบบ',        en:'Sign In',           zh:'登录'       },
+    'login.username':    { lo:'ຊື່ຜູ້ໃຊ້',          th:'ชื่อผู้ใช้',          en:'Username',          zh:'用户名'     },
+    'login.password':    { lo:'ລະຫັດຜ່ານ',          th:'รหัสผ่าน',           en:'Password',          zh:'密码'       },
+    'login.btn':         { lo:'ເຂົ້າສູ່ລະບົບ',     th:'เข้าสู่ระบบ',        en:'Sign In',           zh:'登录'       },
     'login.error':       { lo:'ຊື່ຜູ້ໃຊ້/ລະຫັດ ບໍ່ຖືກ', th:'Username/Password ผิด', en:'Invalid credentials', zh:'用户名或密码错误' },
+    'login.hint':        { lo:'ໃຊ້: admin / 1234', th:'ใช้: admin / 1234',  en:'Use: admin / 1234', zh:'账号: admin / 1234' },
     'set.store':         { lo:'ຂໍ້ມູນຮ້ານ',          th:'ข้อมูลร้าน',         en:'Store Info',        zh:'店铺信息'   },
     'set.tax':           { lo:'ພາສີ',               th:'ภาษี',               en:'Tax',               zh:'税率'       },
     'set.receipt':       { lo:'ໃບບິນ',              th:'ใบเสร็จ',            en:'Receipt',           zh:'收据'       },
@@ -133,60 +139,121 @@ const i18n = (() => {
     'set.reset':         { lo:'ລຶບຂໍ້ມູນທັງໝົດ',    th:'รีเซ็ตทั้งหมด',      en:'Reset All',         zh:'重置数据'   },
   };
 
-  const KEY = 'pos_lang';
-  let cur = localStorage.getItem(KEY) || 'lo';
+  const STORAGE_KEY = 'pos_lang';
+  let cur = localStorage.getItem(STORAGE_KEY) || 'lo';
+  let _instanceCount = 0; // unique ID per switcher instance
 
+  /* ── translate ── */
   function t(key) {
     const e = T[key];
     if (!e) return key;
     return e[cur] || e['en'] || key;
   }
 
+  /* ── apply data-i18n to entire DOM ── */
+  function apply(root) {
+    const scope = root || document;
+    scope.querySelectorAll('[data-i18n]').forEach(el => {
+      el.textContent = t(el.dataset.i18n);
+    });
+    scope.querySelectorAll('[data-i18n-ph]').forEach(el => {
+      el.placeholder = t(el.dataset.i18nPh);
+    });
+    scope.querySelectorAll('[data-i18n-title]').forEach(el => {
+      el.title = t(el.dataset.i18nTitle);
+    });
+    document.documentElement.lang = cur;
+  }
+
+  /* ── setLang ── */
   function setLang(code) {
     cur = code;
-    localStorage.setItem(KEY, code);
+    localStorage.setItem(STORAGE_KEY, code);
+
+    // Update ALL switcher instances (use class, not id)
     const lg = LANGS.find(l => l.code === code);
-    // Update button
-    const fl = document.getElementById('lf'); if (fl && lg) fl.textContent = lg.flag;
-    const ll = document.getElementById('ll'); if (ll && lg) ll.textContent = lg.label;
-    // Update active
-    document.querySelectorAll('.lo-opt').forEach(b => b.classList.toggle('active', b.dataset.code === code));
-    document.getElementById('langDropdown')?.classList.remove('open');
+    document.querySelectorAll('.ls-flag-span').forEach(el => {
+      if (lg) el.textContent = lg.flag;
+    });
+    document.querySelectorAll('.ls-label-span').forEach(el => {
+      if (lg) el.textContent = lg.label;
+    });
+    document.querySelectorAll('.lo-opt').forEach(b => {
+      b.classList.toggle('active', b.dataset.code === code);
+    });
+    document.querySelectorAll('.lang-dropdown').forEach(dd => {
+      dd.classList.remove('open');
+    });
+
     document.documentElement.lang = code;
+
+    // Apply static translations
+    apply();
+
+    // Notify app
     window.dispatchEvent(new CustomEvent('langchange', { detail: code }));
   }
 
   function getLang() { return cur; }
 
+  /* ── buildSwitcher ──
+     Uses class-based selectors so multiple instances work correctly.
+     Each instance gets unique IDs only for internal dropdown toggle.
+  ── */
   function buildSwitcher(mountEl) {
     if (!mountEl) return;
-    const lg = LANGS.find(l => l.code === cur) || LANGS[0];
+    _instanceCount++;
+    const uid = 'ls' + _instanceCount;
+    const lg  = LANGS.find(l => l.code === cur) || LANGS[0];
+
     const wrap = document.createElement('div');
     wrap.className = 'lang-switcher';
+    wrap.dataset.uid = uid;
+
     wrap.innerHTML = `
-      <button class="lang-trigger" id="langTrigger" type="button">
-        <span id="lf">${lg.flag}</span>
-        <span id="ll">${lg.label}</span>
-        <span style="font-size:.55rem;color:var(--muted,#888);margin-left:1px">▾</span>
+      <button class="lang-trigger" id="lsTrigger_${uid}" type="button" aria-label="Select language">
+        <span class="ls-flag-span" style="font-size:1.1rem;line-height:1;flex-shrink:0">${lg.flag}</span>
+        <span class="ls-label-span" style="font-size:.76rem;font-weight:600;letter-spacing:.03em">${lg.label}</span>
+        <span style="font-size:.55rem;color:var(--muted,#888);margin-left:2px;line-height:1">▾</span>
       </button>
-      <div class="lang-dropdown" id="langDropdown">
-        ${LANGS.map(l=>`
-        <button class="lo-opt${l.code===cur?' active':''}" data-code="${l.code}" type="button">
-          <span>${l.flag}</span><span>${l.label}</span>
-        </button>`).join('')}
+      <div class="lang-dropdown" id="lsDrop_${uid}">
+        ${LANGS.map(l => `
+          <button class="lo-opt${l.code === cur ? ' active' : ''}" data-code="${l.code}" type="button">
+            <span style="font-size:1.1rem">${l.flag}</span>
+            <span style="font-size:.83rem;font-weight:600;color:var(--text2,#c4b89a)">${l.label}</span>
+          </button>`).join('')}
       </div>`;
+
     mountEl.appendChild(wrap);
 
-    wrap.querySelector('#langTrigger').addEventListener('click', e => {
+    const trigger = wrap.querySelector(`#lsTrigger_${uid}`);
+    const drop    = wrap.querySelector(`#lsDrop_${uid}`);
+
+    trigger.addEventListener('click', e => {
       e.stopPropagation();
-      document.getElementById('langDropdown').classList.toggle('open');
+      // Close all other dropdowns first
+      document.querySelectorAll('.lang-dropdown').forEach(d => {
+        if (d !== drop) d.classList.remove('open');
+      });
+      drop.classList.toggle('open');
     });
+
     wrap.querySelectorAll('.lo-opt').forEach(btn => {
-      btn.addEventListener('click', e => { e.stopPropagation(); setLang(btn.dataset.code); });
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        setLang(btn.dataset.code);
+      });
     });
-    document.addEventListener('click', () => document.getElementById('langDropdown')?.classList.remove('open'));
+
+    // Close on outside click
+    document.addEventListener('click', () => {
+      drop.classList.remove('open');
+    });
   }
 
-  return { t, setLang, getLang, buildSwitcher, LANGS };
+  /* Auto-apply on load */
+  document.addEventListener('DOMContentLoaded', () => apply());
+
+  return { t, apply, setLang, getLang, buildSwitcher, LANGS };
 })();
 window.i18n = i18n;

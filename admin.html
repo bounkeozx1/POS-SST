@@ -27,16 +27,16 @@
         <div class="login-logo-icon">⚡</div>
         <div>
           <div class="login-logo-title">POS-SST</div>
-          <div class="login-logo-sub">Admin Dashboard</div>
+          <div class="login-logo-sub" data-i18n="admin.panel">Admin Panel</div>
         </div>
       </div>
       <div class="login-form">
         <div class="lf-group">
-          <label>Username</label>
+          <label data-i18n="login.username">ຊື່ຜູ້ໃຊ້</label>
           <input type="text" id="loginUser" value="admin" placeholder="admin" autocomplete="username">
         </div>
         <div class="lf-group">
-          <label>Password</label>
+          <label data-i18n="login.password">ລະຫັດຜ່ານ</label>
           <div class="pw-wrap">
             <input type="password" id="loginPass" value="1234" placeholder="••••••••" autocomplete="current-password">
             <button class="pw-toggle" onclick="togglePw()">👁</button>
@@ -462,7 +462,7 @@
       <div class="modal-body">
         <input type="hidden" id="umId">
         <div class="mf-row"><label>ชื่อเต็ม</label><input class="mf-input" id="umName" placeholder="ชื่อ นามสกุล"></div>
-        <div class="mf-row"><label>Username</label><input class="mf-input" id="umUser" placeholder="username"></div>
+        <div class="mf-row"><label data-i18n="login.username">ຊື່ຜູ້ໃຊ້</label><input class="mf-input" id="umUser" placeholder="username"></div>
         <div class="mf-row"><label>รหัสผ่าน</label><input class="mf-input" id="umPass" type="password" placeholder="••••••••"></div>
         <div class="mf-row"><label>บทบาท</label>
           <select class="mf-input" id="umRole">
