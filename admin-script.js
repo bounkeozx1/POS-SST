@@ -84,6 +84,12 @@ function generateSampleOrders() {
 // ════════════════════════════════
 // 2. AUTH
 // ════════════════════════════════
+// Build lang switcher on the login screen immediately (before login)
+document.addEventListener('DOMContentLoaded', () => {
+  const loginLangMount = document.getElementById('loginLangMount');
+  if (loginLangMount) i18n.buildSwitcher(loginLangMount);
+});
+
 function doLogin() {
   const u = document.getElementById('loginUser').value.trim();
   const p = document.getElementById('loginPass').value;
