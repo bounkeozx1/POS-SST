@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="admin-style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<base target="_blank">
 </head>
 <body>
 
@@ -64,11 +65,11 @@
             <div class="sb-sub">Admin Panel</div>
           </div>
         </div>
-        <button class="sb-collapse" id="sbCollapse" onclick="toggleSidebar()" title="ย่อ/ขยาย">‹</button>
+        <button class="sb-collapse" id="sbCollapse" onclick="toggleSidebar()" data-i18n-title="tooltip.collapse">‹</button>
       </div>
 
       <nav class="sb-nav">
-        <div class="sb-section-label">เมนูหลัก</div>
+        <div class="sb-section-label" data-i18n="menu.main">เมนูหลัก</div>
         <button class="sb-item active" data-page="dashboard" onclick="navTo('dashboard', this)">
           <span class="sb-icon">📊</span><span class="sb-label" data-i18n="admin.dashboard">Dashboard</span>
         </button>
@@ -82,7 +83,7 @@
         <button class="sb-item" data-page="inventory" onclick="navTo('inventory', this)">
           <span class="sb-icon">📋</span><span class="sb-label" data-i18n="admin.inventory">สต็อกสินค้า</span>
         </button>
-        <div class="sb-section-label">ระบบ</div>
+        <div class="sb-section-label" data-i18n="menu.system">ระบบ</div>
         <button class="sb-item" data-page="reports" onclick="navTo('reports', this)">
           <span class="sb-icon">📈</span><span class="sb-label" data-i18n="admin.reports">รายงาน</span>
         </button>
@@ -102,7 +103,7 @@
             <div class="sb-user-role" data-i18n="users.role.admin">Super Admin</div>
           </div>
         </div>
-        <button class="sb-logout" onclick="doLogout()" title="ออกจากระบบ">⏻</button>
+        <button class="sb-logout" onclick="doLogout()" data-i18n-title="tooltip.logout">⏻</button>
       </div>
     </aside>
 
@@ -115,12 +116,12 @@
           <button class="tb-menu-btn" id="tbMenuBtn" onclick="toggleMobileMenu()">☰</button>
           <div class="tb-breadcrumb">
             <span class="tb-bc-icon" id="tbIcon">📊</span>
-            <span class="tb-bc-title" id="tbTitle">Dashboard</span>
+            <span class="tb-bc-title" id="tbTitle" data-i18n="admin.dashboard">Dashboard</span>
           </div>
         </div>
         <div class="tb-right">
-          <button class="tb-icon-btn" onclick="refreshPage()" title="รีเฟรช">🔄</button>
-        <div id="langMount"></div>
+          <button class="tb-icon-btn" onclick="refreshPage()" data-i18n-title="tooltip.refresh">🔄</button>
+          <div id="langMount"></div>
           <div class="tb-datetime" id="tbDatetime"></div>
           <button class="tb-avatar-btn" onclick="navTo('settings', null)">
             <div class="tb-avatar" id="tbAvatar">A</div>
@@ -133,7 +134,7 @@
 
         <!-- ══ DASHBOARD ══ -->
         <section class="page active" id="page-dashboard">
-          <div class="page-title">ภาพรวมระบบ</div>
+          <div class="page-title" data-i18n="admin.dashboard">ภาพรวมระบบ</div>
 
           <!-- KPI Row -->
           <div class="kpi-grid" id="kpiGrid"></div>
@@ -142,16 +143,16 @@
           <div class="charts-row">
             <div class="chart-card wide">
               <div class="chart-header">
-                <div class="chart-title">ยอดขาย 7 วันล่าสุด</div>
+                <div class="chart-title" data-i18n="dash.sales">ยอดขาย 7 วันล่าสุด</div>
                 <div class="chart-actions">
-                  <button class="chart-btn active" onclick="switchChart('week',this)">สัปดาห์</button>
-                  <button class="chart-btn" onclick="switchChart('month',this)">เดือน</button>
+                  <button class="chart-btn active" onclick="switchChart('week',this)" data-i18n="dash.week">สัปดาห์</button>
+                  <button class="chart-btn" onclick="switchChart('month',this)" data-i18n="dash.month">เดือน</button>
                 </div>
               </div>
               <canvas id="salesChart" height="200"></canvas>
             </div>
             <div class="chart-card">
-              <div class="chart-header"><div class="chart-title">สินค้าขายดี</div></div>
+              <div class="chart-header"><div class="chart-title" data-i18n="dash.top">สินค้าขายดี</div></div>
               <canvas id="topChart" height="200"></canvas>
             </div>
           </div>
@@ -159,8 +160,8 @@
           <!-- Recent Orders -->
           <div class="section-card">
             <div class="sc-header">
-              <div class="sc-title">คำสั่งซื้อล่าสุด</div>
-              <button class="sc-link" onclick="navTo('orders', null)">ดูทั้งหมด →</button>
+              <div class="sc-title" data-i18n="dash.recent">คำสั่งซื้อล่าสุด</div>
+              <button class="sc-link" onclick="navTo('orders', null)" data-i18n="dash.viewall">ดูทั้งหมด →</button>
             </div>
             <div class="table-wrap">
               <table class="data-table" id="dashOrdersTable"></table>
@@ -171,13 +172,13 @@
         <!-- ══ ORDERS ══ -->
         <section class="page" id="page-orders">
           <div class="page-top-row">
-            <div class="page-title">คำสั่งซื้อ</div>
+            <div class="page-title" data-i18n="admin.orders">คำสั่งซื้อ</div>
             <div class="page-actions">
               <select class="filter-select" id="orderStatusFilter" onchange="renderOrdersPage()">
-                <option value="all">ทุกสถานะ</option>
-                <option value="pending">รอดำเนินการ</option>
-                <option value="done">สำเร็จ</option>
-                <option value="cancel">ยกเลิก</option>
+                <option value="all" data-i18n="filter.all">ทุกสถานะ</option>
+                <option value="pending" data-i18n="status.pending">รอดำเนินการ</option>
+                <option value="done" data-i18n="status.done">สำเร็จ</option>
+                <option value="cancel" data-i18n="status.cancel">ยกเลิก</option>
               </select>
             </div>
           </div>
@@ -185,30 +186,30 @@
             <div class="table-wrap">
               <table class="data-table" id="ordersTable"></table>
             </div>
-            <div class="table-empty" id="ordersEmpty" style="display:none">ไม่มีคำสั่งซื้อ</div>
+            <div class="table-empty" id="ordersEmpty" style="display:none" data-i18n="orders.empty">ไม่มีคำสั่งซื้อ</div>
           </div>
         </section>
 
         <!-- ══ PRODUCTS ══ -->
         <section class="page" id="page-products">
           <div class="page-top-row">
-            <div class="page-title">สินค้า / เมนู</div>
-            <button class="primary-btn" onclick="openProductModal()">+ เพิ่มสินค้า</button>
+            <div class="page-title" data-i18n="admin.products">สินค้า / เมนู</div>
+            <button class="primary-btn" onclick="openProductModal()" data-i18n="prod.add">+ เพิ่มสินค้า</button>
           </div>
 
           <!-- Search + filter -->
           <div class="filter-bar">
             <div class="filter-search">
               <span>🔍</span>
-              <input type="text" id="productSearch" placeholder="ค้นหาสินค้า..." oninput="renderProductsPage()">
+              <input type="text" id="productSearch" placeholder="ค้นหาสินค้า..." oninput="renderProductsPage()" data-i18n-ph="search.product">
             </div>
             <select class="filter-select" id="productCatFilter" onchange="renderProductsPage()">
-              <option value="all">ทุกหมวด</option>
-              <option value="rice">🍚 ข้าว</option>
-              <option value="noodle">🍜 เฝอ/ก๋วย</option>
-              <option value="grill">🔥 ปิ้ง</option>
-              <option value="drink">🥤 เครื่องดื่ม</option>
-              <option value="dessert">🍮 ของหวาน</option>
+              <option value="all" data-i18n="cat.all">ทุกหมวด</option>
+              <option value="rice" data-i18n="cat.rice">🍚 ข้าว</option>
+              <option value="noodle" data-i18n="cat.noodle">🍜 เฝอ/ก๋วย</option>
+              <option value="grill" data-i18n="cat.grill">🔥 ปิ้ง</option>
+              <option value="drink" data-i18n="cat.drink">🥤 เครื่องดื่ม</option>
+              <option value="dessert" data-i18n="cat.dessert">🍮 ของหวาน</option>
             </select>
           </div>
 
@@ -222,8 +223,8 @@
         <!-- ══ INVENTORY ══ -->
         <section class="page" id="page-inventory">
           <div class="page-top-row">
-            <div class="page-title">สต็อกสินค้า</div>
-            <button class="primary-btn" onclick="openStockModal()">+ ปรับสต็อก</button>
+            <div class="page-title" data-i18n="admin.inventory">สต็อกสินค้า</div>
+            <button class="primary-btn" onclick="openStockModal()" data-i18n="inv.adjust">+ ปรับสต็อก</button>
           </div>
 
           <!-- Stock alert -->
@@ -237,7 +238,7 @@
 
           <!-- Stock log -->
           <div class="section-card" style="margin-top:16px">
-            <div class="sc-header"><div class="sc-title">ประวัติการปรับสต็อก</div></div>
+            <div class="sc-header"><div class="sc-title" data-i18n="inv.history">ประวัติการปรับสต็อก</div></div>
             <div class="table-wrap">
               <table class="data-table" id="stockLogTable"></table>
             </div>
@@ -247,12 +248,12 @@
         <!-- ══ REPORTS ══ -->
         <section class="page" id="page-reports">
           <div class="page-top-row">
-            <div class="page-title">รายงานยอดขาย</div>
+            <div class="page-title" data-i18n="rep.title">รายงานยอดขาย</div>
             <div class="page-actions">
               <select class="filter-select" id="reportPeriod" onchange="renderReportsPage()">
-                <option value="7">7 วัน</option>
-                <option value="30">30 วัน</option>
-                <option value="90">90 วัน</option>
+                <option value="7" data-i18n="rep.7days">7 วัน</option>
+                <option value="30" data-i18n="rep.30days">30 วัน</option>
+                <option value="90" data-i18n="rep.90days">90 วัน</option>
               </select>
             </div>
           </div>
@@ -261,19 +262,19 @@
 
           <div class="charts-row">
             <div class="chart-card wide">
-              <div class="chart-header"><div class="chart-title">ยอดขายรายวัน</div></div>
+              <div class="chart-header"><div class="chart-title" data-i18n="rep.daily">ยอดขายรายวัน</div></div>
               <canvas id="reportChart" height="220"></canvas>
             </div>
             <div class="chart-card">
-              <div class="chart-header"><div class="chart-title">สัดส่วนหมวดหมู่</div></div>
+              <div class="chart-header"><div class="chart-title" data-i18n="rep.category">สัดส่วนหมวดหมู่</div></div>
               <canvas id="catChart" height="220"></canvas>
             </div>
           </div>
 
           <div class="section-card">
             <div class="sc-header">
-              <div class="sc-title">รายการขายทั้งหมด</div>
-              <button class="sc-link" onclick="exportCSV()">⬇ Export CSV</button>
+              <div class="sc-title" data-i18n="rep.all">รายการขายทั้งหมด</div>
+              <button class="sc-link" onclick="exportCSV()" data-i18n="rep.export">⬇ Export CSV</button>
             </div>
             <div class="table-wrap">
               <table class="data-table" id="reportTable"></table>
@@ -284,8 +285,8 @@
         <!-- ══ USERS ══ -->
         <section class="page" id="page-users">
           <div class="page-top-row">
-            <div class="page-title">ผู้ใช้งาน</div>
-            <button class="primary-btn" onclick="openUserModal()">+ เพิ่มผู้ใช้</button>
+            <div class="page-title" data-i18n="admin.users">ผู้ใช้งาน</div>
+            <button class="primary-btn" onclick="openUserModal()" data-i18n="user.add">+ เพิ่มผู้ใช้</button>
           </div>
           <div class="section-card">
             <div class="table-wrap">
@@ -296,57 +297,60 @@
 
         <!-- ══ SETTINGS ══ -->
         <section class="page" id="page-settings">
-          <div class="page-title">ตั้งค่าระบบ</div>
+          <div class="page-title" data-i18n="admin.settings">ตั้งค่าระบบ</div>
           <div class="settings-layout">
 
             <div class="settings-group">
-              <div class="sg-title">🏪 ข้อมูลร้าน</div>
-              <div class="sg-row"><label>ชื่อร้าน</label><input class="sg-input" id="sStoreName" value="ร้านอาหารลาว"></div>
-              <div class="sg-row"><label>โทรศัพท์</label><input class="sg-input" id="sStorePhone" value="020 xxxx xxxx"></div>
-              <div class="sg-row"><label>ที่อยู่</label><input class="sg-input" id="sStoreAddr" value="เวียงจันทน์, ลาว"></div>
-              <div class="sg-row"><label>เวลาเปิด-ปิด</label><input class="sg-input" value="08:00 – 22:00"></div>
-              <button class="sg-btn" onclick="showToast('✅ บันทึกข้อมูลร้านแล้ว')">💾 บันทึก</button>
+              <div class="sg-title" data-i18n="set.store">🏪 ข้อมูลร้าน</div>
+              <div class="sg-row"><label data-i18n="settings.storename">ชื่อร้าน</label><input class="sg-input" id="sStoreName" value="ร้านอาหารลาว"></div>
+              <div class="sg-row"><label data-i18n="settings.phone">โทรศัพท์</label><input class="sg-input" id="sStorePhone" value="020 xxxx xxxx"></div>
+              <div class="sg-row"><label data-i18n="settings.address">ที่อยู่</label><input class="sg-input" id="sStoreAddr" value="เวียงจันทน์, ลาว"></div>
+              <div class="sg-row"><label data-i18n="settings.hours">เวลาเปิด-ปิด</label><input class="sg-input" value="08:00 – 22:00"></div>
+              <button class="sg-btn" onclick="showToast('✅ บันทึกข้อมูลร้านแล้ว')" data-i18n="btn.save">💾 บันทึก</button>
             </div>
 
             <div class="settings-group">
-              <div class="sg-title">💰 ภาษี & ส่วนลด</div>
-              <div class="sg-row"><label>VAT (%)</label><input class="sg-input" id="sVat" type="number" value="7"></div>
-              <div class="sg-row"><label>ส่วนลดสูงสุด (%)</label><input class="sg-input" type="number" value="20"></div>
-              <div class="sg-row"><label>สกุลเงิน</label>
+              <div class="sg-title" data-i18n="set.tax">💰 ภาษี & ส่วนลด</div>
+              <div class="sg-row"><label data-i18n="settings.vat">VAT (%)</label><input class="sg-input" id="sVat" type="number" value="7"></div>
+              <div class="sg-row"><label data-i18n="settings.discount">ส่วนลดสูงสุด (%)</label><input class="sg-input" type="number" value="20"></div>
+              <div class="sg-row"><label data-i18n="settings.currency">สกุลเงิน</label>
                 <select class="sg-input">
                   <option>LAK – ກີບ</option>
                   <option>THB – บาท</option>
                   <option>USD – Dollar</option>
                 </select>
               </div>
-              <button class="sg-btn" onclick="showToast('✅ บันทึกการตั้งค่าภาษีแล้ว')">💾 บันทึก</button>
+              <button class="sg-btn" onclick="showToast('✅ บันทึกการตั้งค่าภาษีแล้ว')" data-i18n="btn.save">💾 บันทึก</button>
             </div>
 
             <div class="settings-group">
-              <div class="sg-title">🖨️ ใบเสร็จ</div>
-              <div class="sg-row"><label>หัวใบเสร็จ</label><input class="sg-input" value="ร้านอาหารลาว"></div>
-              <div class="sg-row"><label>ข้อความท้าย</label><input class="sg-input" value="ขอบคุณที่ใช้บริการ 🙏"></div>
-              <div class="sg-row"><label>แสดง VAT</label>
-                <select class="sg-input"><option>แสดง</option><option>ซ่อน</option></select>
+              <div class="sg-title" data-i18n="set.receipt">🖨️ ใบเสร็จ</div>
+              <div class="sg-row"><label data-i18n="settings.receiptheader">หัวใบเสร็จ</label><input class="sg-input" value="ร้านอาหารลาว"></div>
+              <div class="sg-row"><label data-i18n="settings.receiptfooter">ข้อความท้าย</label><input class="sg-input" value="ขอบคุณที่ใช้บริการ 🙏"></div>
+              <div class="sg-row"><label data-i18n="settings.showvat">แสดง VAT</label>
+                <select class="sg-input">
+                  <option data-i18n="settings.show">แสดง</option>
+                  <option data-i18n="settings.hide">ซ่อน</option>
+                </select>
               </div>
-              <button class="sg-btn" onclick="showToast('✅ บันทึกการตั้งค่าใบเสร็จแล้ว')">💾 บันทึก</button>
+              <button class="sg-btn" onclick="showToast('✅ บันทึกการตั้งค่าใบเสร็จแล้ว')" data-i18n="btn.save">💾 บันทึก</button>
             </div>
 
             <div class="settings-group">
-              <div class="sg-title">🔐 เปลี่ยนรหัสผ่าน</div>
-              <div class="sg-row"><label>รหัสปัจจุบัน</label><input class="sg-input" type="password" placeholder="••••••••"></div>
-              <div class="sg-row"><label>รหัสใหม่</label><input class="sg-input" type="password" placeholder="••••••••"></div>
-              <div class="sg-row"><label>ยืนยันรหัสใหม่</label><input class="sg-input" type="password" placeholder="••••••••"></div>
-              <button class="sg-btn" onclick="showToast('✅ เปลี่ยนรหัสผ่านแล้ว')">🔐 เปลี่ยนรหัสผ่าน</button>
+              <div class="sg-title" data-i18n="set.password">🔐 เปลี่ยนรหัสผ่าน</div>
+              <div class="sg-row"><label data-i18n="settings.currentpw">รหัสปัจจุบัน</label><input class="sg-input" type="password" placeholder="••••••••"></div>
+              <div class="sg-row"><label data-i18n="settings.newpw">รหัสใหม่</label><input class="sg-input" type="password" placeholder="••••••••"></div>
+              <div class="sg-row"><label data-i18n="settings.confirmpw">ยืนยันรหัสใหม่</label><input class="sg-input" type="password" placeholder="••••••••"></div>
+              <button class="sg-btn" onclick="showToast('✅ เปลี่ยนรหัสผ่านแล้ว')" data-i18n="set.change">🔐 เปลี่ยนรหัสผ่าน</button>
             </div>
 
             <div class="settings-group danger-group">
-              <div class="sg-title">⚠️ Zone อันตราย</div>
+              <div class="sg-title" data-i18n="set.danger">⚠️ Zone อันตราย</div>
               <div class="sg-row" style="flex-direction:column;gap:10px">
-                <button class="sg-btn blue" onclick="showToast('💾 สำรองข้อมูลสำเร็จ')">💾 สำรองข้อมูล (Backup)</button>
-                <button class="sg-btn red" onclick="confirmReset()">🗑️ รีเซ็ตข้อมูลทั้งหมด</button>
+                <button class="sg-btn blue" onclick="showToast('💾 สำรองข้อมูลสำเร็จ')" data-i18n="set.backup">💾 สำรองข้อมูล (Backup)</button>
+                <button class="sg-btn red" onclick="confirmReset()" data-i18n="set.reset">🗑️ รีเซ็ตข้อมูลทั้งหมด</button>
               </div>
-              <div class="version-info">POS-SST Admin v1.0.0 · Build 2025</div>
+              <div class="version-info" data-i18n="version.info">POS-SST Admin v1.0.0 · Build 2025</div>
             </div>
 
           </div>
@@ -385,37 +389,37 @@
   <div class="modal-overlay" id="productModal">
     <div class="modal-card">
       <div class="modal-header">
-        <div class="modal-title" id="productModalTitle">เพิ่มสินค้า</div>
+        <div class="modal-title" id="productModalTitle" data-i18n="modal.addproduct">เพิ่มสินค้า</div>
         <button class="modal-close" onclick="closeModal('productModal')">✕</button>
       </div>
       <div class="modal-body">
         <input type="hidden" id="pmId">
-        <div class="mf-row"><label>ชื่อสินค้า</label><input class="mf-input" id="pmName" placeholder="เช่น ข้าวผัด"></div>
-        <div class="mf-row"><label>ราคา (ກີບ)</label><input class="mf-input" id="pmPrice" type="number" inputmode="numeric" placeholder="35000"></div>
-        <div class="mf-row"><label>คำอธิบาย</label><input class="mf-input" id="pmDesc" placeholder="รายละเอียดสั้น ๆ"></div>
+        <div class="mf-row"><label data-i18n="modal.productname">ชื่อสินค้า</label><input class="mf-input" id="pmName" placeholder="เช่น ข้าวผัด"></div>
+        <div class="mf-row"><label data-i18n="modal.price">ราคา (ກີບ)</label><input class="mf-input" id="pmPrice" type="number" inputmode="numeric" placeholder="35000"></div>
+        <div class="mf-row"><label data-i18n="modal.desc">คำอธิบาย</label><input class="mf-input" id="pmDesc" placeholder="รายละเอียดสั้น ๆ"></div>
         <div class="mf-row2">
-          <div class="mf-row"><label>หมวดหมู่</label>
+          <div class="mf-row"><label data-i18n="modal.cat">หมวดหมู่</label>
             <select class="mf-input" id="pmCat">
-              <option value="rice">🍚 ข้าว</option>
-              <option value="noodle">🍜 เฝอ/ก๋วย</option>
-              <option value="grill">🔥 ปิ้ง</option>
-              <option value="drink">🥤 เครื่องดื่ม</option>
-              <option value="dessert">🍮 ของหวาน</option>
+              <option value="rice" data-i18n="cat.rice">🍚 ข้าว</option>
+              <option value="noodle" data-i18n="cat.noodle">🍜 เฝอ/ก๋วย</option>
+              <option value="grill" data-i18n="cat.grill">🔥 ปิ้ง</option>
+              <option value="drink" data-i18n="cat.drink">🥤 เครื่องดื่ม</option>
+              <option value="dessert" data-i18n="cat.dessert">🍮 ของหวาน</option>
             </select>
           </div>
-          <div class="mf-row"><label>สต็อกเริ่มต้น</label><input class="mf-input" id="pmStock" type="number" inputmode="numeric" placeholder="99"></div>
+          <div class="mf-row"><label data-i18n="modal.stock">สต็อกเริ่มต้น</label><input class="mf-input" id="pmStock" type="number" inputmode="numeric" placeholder="99"></div>
         </div>
-        <div class="mf-row"><label>สถานะ</label>
+        <div class="mf-row"><label data-i18n="modal.status">สถานะ</label>
           <select class="mf-input" id="pmStatus">
-            <option value="active">✅ ขายอยู่</option>
-            <option value="soldout">❌ หมด</option>
-            <option value="hidden">🚫 ซ่อน</option>
+            <option value="active" data-i18n="modal.active">✅ ขายอยู่</option>
+            <option value="soldout" data-i18n="modal.soldout">❌ หมด</option>
+            <option value="hidden" data-i18n="modal.hidden">🚫 ซ่อน</option>
           </select>
         </div>
       </div>
       <div class="modal-footer">
-        <button class="modal-btn cancel" onclick="closeModal('productModal')">ยกเลิก</button>
-        <button class="modal-btn confirm" onclick="saveProduct()">💾 บันทึก</button>
+        <button class="modal-btn cancel" onclick="closeModal('productModal')" data-i18n="modal.cancel">ยกเลิก</button>
+        <button class="modal-btn confirm" onclick="saveProduct()" data-i18n="modal.save">💾 บันทึก</button>
       </div>
     </div>
   </div>
@@ -424,30 +428,30 @@
   <div class="modal-overlay" id="stockModal">
     <div class="modal-card">
       <div class="modal-header">
-        <div class="modal-title">ปรับสต็อกสินค้า</div>
+        <div class="modal-title" data-i18n="modal.adjuststock">ปรับสต็อกสินค้า</div>
         <button class="modal-close" onclick="closeModal('stockModal')">✕</button>
       </div>
       <div class="modal-body">
-        <div class="mf-row"><label>สินค้า</label>
+        <div class="mf-row"><label data-i18n="modal.product">สินค้า</label>
           <select class="mf-input" id="smProduct"></select>
         </div>
         <div class="mf-row2">
-          <div class="mf-row"><label>ประเภท</label>
+          <div class="mf-row"><label data-i18n="modal.type">ประเภท</label>
             <select class="mf-input" id="smType">
-              <option value="in">เข้า (+)</option>
-              <option value="out">ออก (−)</option>
-              <option value="set">ตั้งค่าใหม่</option>
+              <option value="in" data-i18n="modal.in">เข้า (+)</option>
+              <option value="out" data-i18n="modal.out">ออก (−)</option>
+              <option value="set" data-i18n="modal.set">ตั้งค่าใหม่</option>
             </select>
           </div>
-          <div class="mf-row"><label>จำนวน</label>
+          <div class="mf-row"><label data-i18n="modal.qty">จำนวน</label>
             <input class="mf-input" id="smQty" type="number" inputmode="numeric" placeholder="10">
           </div>
         </div>
-        <div class="mf-row"><label>หมายเหตุ</label><input class="mf-input" id="smNote" placeholder="เช่น รับสินค้าใหม่"></div>
+        <div class="mf-row"><label data-i18n="modal.note">หมายเหตุ</label><input class="mf-input" id="smNote" placeholder="เช่น รับสินค้าใหม่"></div>
       </div>
       <div class="modal-footer">
-        <button class="modal-btn cancel" onclick="closeModal('stockModal')">ยกเลิก</button>
-        <button class="modal-btn confirm" onclick="saveStock()">✅ ยืนยัน</button>
+        <button class="modal-btn cancel" onclick="closeModal('stockModal')" data-i18n="modal.cancel">ยกเลิก</button>
+        <button class="modal-btn confirm" onclick="saveStock()" data-i18n="modal.confirm">✅ ยืนยัน</button>
       </div>
     </div>
   </div>
@@ -456,31 +460,31 @@
   <div class="modal-overlay" id="userModal">
     <div class="modal-card">
       <div class="modal-header">
-        <div class="modal-title" id="userModalTitle">เพิ่มผู้ใช้</div>
+        <div class="modal-title" id="userModalTitle" data-i18n="modal.adduser">เพิ่มผู้ใช้</div>
         <button class="modal-close" onclick="closeModal('userModal')">✕</button>
       </div>
       <div class="modal-body">
         <input type="hidden" id="umId">
-        <div class="mf-row"><label>ชื่อเต็ม</label><input class="mf-input" id="umName" placeholder="ชื่อ นามสกุล"></div>
+        <div class="mf-row"><label data-i18n="modal.fullname">ชื่อเต็ม</label><input class="mf-input" id="umName" placeholder="ชื่อ นามสกุล"></div>
         <div class="mf-row"><label data-i18n="login.username">ຊື່ຜູ້ໃຊ້</label><input class="mf-input" id="umUser" placeholder="username"></div>
-        <div class="mf-row"><label>รหัสผ่าน</label><input class="mf-input" id="umPass" type="password" placeholder="••••••••"></div>
-        <div class="mf-row"><label>บทบาท</label>
+        <div class="mf-row"><label data-i18n="modal.password">รหัสผ่าน</label><input class="mf-input" id="umPass" type="password" placeholder="••••••••"></div>
+        <div class="mf-row"><label data-i18n="modal.role">บทบาท</label>
           <select class="mf-input" id="umRole">
-            <option value="admin">⚡ Super Admin</option>
-            <option value="manager">👔 ผู้จัดการ</option>
-            <option value="cashier">🏪 พนักงานขาย</option>
+            <option value="admin" data-i18n="user.role.admin">⚡ Super Admin</option>
+            <option value="manager" data-i18n="user.role.mgr">👔 ผู้จัดการ</option>
+            <option value="cashier" data-i18n="user.role.cash">🏪 พนักงานขาย</option>
           </select>
         </div>
-        <div class="mf-row"><label>สถานะ</label>
+        <div class="mf-row"><label data-i18n="modal.status">สถานะ</label>
           <select class="mf-input" id="umStatus">
-            <option value="active">✅ ใช้งาน</option>
-            <option value="inactive">🚫 ระงับ</option>
+            <option value="active" data-i18n="modal.useractive">✅ ใช้งาน</option>
+            <option value="inactive" data-i18n="modal.userinactive">🚫 ระงับ</option>
           </select>
         </div>
       </div>
       <div class="modal-footer">
-        <button class="modal-btn cancel" onclick="closeModal('userModal')">ยกเลิก</button>
-        <button class="modal-btn confirm" onclick="saveUser()">💾 บันทึก</button>
+        <button class="modal-btn cancel" onclick="closeModal('userModal')" data-i18n="modal.cancel">ยกเลิก</button>
+        <button class="modal-btn confirm" onclick="saveUser()" data-i18n="modal.save">💾 บันทึก</button>
       </div>
     </div>
   </div>
@@ -489,13 +493,13 @@
   <div class="modal-overlay" id="orderDetailModal">
     <div class="modal-card">
       <div class="modal-header">
-        <div class="modal-title" id="odTitle">รายละเอียดออร์เดอร์</div>
+        <div class="modal-title" id="odTitle" data-i18n="modal.orderdetail">รายละเอียดออร์เดอร์</div>
         <button class="modal-close" onclick="closeModal('orderDetailModal')">✕</button>
       </div>
       <div class="modal-body" id="odBody"></div>
       <div class="modal-footer">
-        <button class="modal-btn cancel" onclick="closeModal('orderDetailModal')">ปิด</button>
-        <button class="modal-btn confirm" onclick="printReceipt()">🖨️ พิมพ์ใบเสร็จ</button>
+        <button class="modal-btn cancel" onclick="closeModal('orderDetailModal')" data-i18n="modal.close">ปิด</button>
+        <button class="modal-btn confirm" onclick="printReceipt()" data-i18n="modal.print">🖨️ พิมพ์ใบเสร็จ</button>
       </div>
     </div>
   </div>
