@@ -23,6 +23,13 @@
     </div>
     <!-- Language switcher on login -->
     <div class="login-lang-wrap" id="loginLangMount"></div>
+    <div class="login-font-wrap">
+      <div class="font-controls" aria-label="ปรับขนาดตัวอักษร">
+        <button class="font-btn" type="button" onclick="changeUiFontSize(-1)" title="ลดขนาดตัวอักษร">A-</button>
+        <button class="font-btn font-size-label" type="button" onclick="resetUiFontSize()" title="รีเซ็ตขนาดตัวอักษร">110%</button>
+        <button class="font-btn" type="button" onclick="changeUiFontSize(1)" title="เพิ่มขนาดตัวอักษร">A+</button>
+      </div>
+    </div>
     <div class="login-card">
       <div class="login-logo">
         <div class="login-logo-icon">⚡</div>
@@ -121,6 +128,11 @@
         </div>
         <div class="tb-right">
           <button class="tb-icon-btn" onclick="refreshPage()" data-i18n-title="tooltip.refresh">🔄</button>
+          <div class="font-controls" aria-label="ปรับขนาดตัวอักษร">
+            <button class="font-btn" type="button" onclick="changeUiFontSize(-1)" title="ลดขนาดตัวอักษร">A-</button>
+            <button class="font-btn font-size-label" type="button" onclick="resetUiFontSize()" title="รีเซ็ตขนาดตัวอักษร">110%</button>
+            <button class="font-btn" type="button" onclick="changeUiFontSize(1)" title="เพิ่มขนาดตัวอักษร">A+</button>
+          </div>
           <div id="langMount"></div>
           <div class="tb-datetime" id="tbDatetime"></div>
           <button class="tb-avatar-btn" onclick="navTo('settings', null)">

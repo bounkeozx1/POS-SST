@@ -6,6 +6,50 @@
 
 'use strict';
 
+const UI_FONT_KEY = 'pos-sst-font-scale';
+const UI_FONT_STEPS = [1, 1.1, 1.22, 1.34, 1.48];
+const UI_FONT_DEFAULT = 1.1;
+
+function applyUiFontScale(scale) {
+  const next = Math.min(UI_FONT_STEPS[UI_FONT_STEPS.length - 1], Math.max(UI_FONT_STEPS[0], Number(scale) || UI_FONT_DEFAULT));
+  document.documentElement.style.setProperty('--font-scale', next);
+  document.querySelectorAll('.font-size-label').forEach(el => {
+    el.textContent = `${Math.round(next * 100)}%`;
+  });
+}
+
+function getUiFontScale() {
+  return Number(localStorage.getItem(UI_FONT_KEY)) || UI_FONT_DEFAULT;
+}
+
+function changeUiFontSize(direction) {
+  const current = getUiFontScale();
+  const nearest = UI_FONT_STEPS.reduce((best, step, index) =>
+    Math.abs(step - current) < Math.abs(UI_FONT_STEPS[best] - current) ? index : best, 0);
+  const nextIndex = Math.min(UI_FONT_STEPS.length - 1, Math.max(0, nearest + direction));
+  const next = UI_FONT_STEPS[nextIndex];
+  localStorage.setItem(UI_FONT_KEY, next);
+  applyUiFontScale(next);
+  redrawActivePage();
+}
+
+function resetUiFontSize() {
+  localStorage.removeItem(UI_FONT_KEY);
+  applyUiFontScale(UI_FONT_DEFAULT);
+  redrawActivePage();
+}
+
+function redrawActivePage() {
+  if (!DB?.currentUser) return;
+  const active = document.querySelector('.page.active');
+  if (!active) return;
+  navTo(active.id.replace('page-', ''), null);
+}
+
+function scaledChartFont(px) {
+  return Math.round(px * getUiFontScale());
+}
+
 // ════════════════════════════════
 // 0. MULTILINGUAL HELPERS
 // ════════════════════════════════
@@ -104,6 +148,7 @@ function generateSampleOrders() {
 // 2. AUTH
 // ════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
+  applyUiFontScale(getUiFontScale());
   const loginLangMount = document.getElementById('loginLangMount');
   if (loginLangMount) i18n.buildSwitcher(loginLangMount);
 });
@@ -378,7 +423,7 @@ function drawBarChart(ctx, canvas, labels, values, color1, color2) {
     const y = pad.top + cH - (cH * i / 4);
     ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
     ctx.fillStyle = 'rgba(160,160,184,0.6)';
-    ctx.font = '10px DM Mono';
+    ctx.font = `${scaledChartFont(10)}px DM Mono`;
     ctx.textAlign = 'right';
     ctx.fillText(fmtK(max * i / 4), pad.left - 6, y + 4);
   }
@@ -397,7 +442,7 @@ function drawBarChart(ctx, canvas, labels, values, color1, color2) {
     ctx.fill();
 
     ctx.fillStyle = 'rgba(160,160,184,0.8)';
-    ctx.font = '10px Noto Sans Thai';
+    ctx.font = `${scaledChartFont(10)}px Noto Sans Thai`;
     ctx.textAlign = 'center';
     ctx.fillText(lbl, x + barW / 2, pad.top + cH + 16);
   });
@@ -425,7 +470,7 @@ function drawHorizBar(ctx, canvas, labels, values) {
     const bW  = ((values[i] / max) * (W - pad.left - pad.right));
 
     ctx.fillStyle = 'rgba(160,160,184,0.85)';
-    ctx.font = '10px Noto Sans Thai';
+    ctx.font = `${scaledChartFont(10)}px Noto Sans Thai`;
     ctx.textAlign = 'right';
     const truncated = lbl.length > 7 ? lbl.substring(0,7)+'…' : lbl;
     ctx.fillText(truncated, pad.left - 8, y + 4);
@@ -441,7 +486,7 @@ function drawHorizBar(ctx, canvas, labels, values) {
     ctx.fill();
 
     ctx.fillStyle = '#ffb347';
-    ctx.font = 'bold 10px DM Mono';
+    ctx.font = `bold ${scaledChartFont(10)}px DM Mono`;
     ctx.textAlign = 'left';
     ctx.fillText(values[i], pad.left + bW + 6, y + 4);
   });
@@ -508,7 +553,7 @@ function drawCategoryChart(canvasId) {
     ctx.fillStyle = catColors[i];
     ctx.fillRect(x, y, 10, 10);
     ctx.fillStyle = 'rgba(160,160,184,0.8)';
-    ctx.font = '9px Noto Sans Thai';
+    ctx.font = `${scaledChartFont(9)}px Noto Sans Thai`;
     ctx.textAlign = 'left';
     const pct = total > 0 ? Math.round(freq[cat]/total*100) : 0;
     const label = (catNames[cat][lang] || catNames[cat].en);

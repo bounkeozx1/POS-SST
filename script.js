@@ -3,6 +3,36 @@
    Requires: i18n.js → db.js → script.js  */
 
 let cart = [], currentCat = 'all', searchQuery = '';
+const UI_FONT_KEY = 'pos-sst-font-scale';
+const UI_FONT_STEPS = [1, 1.12, 1.24, 1.36, 1.5];
+const UI_FONT_DEFAULT = 1.12;
+
+function applyUiFontScale(scale) {
+  const next = Math.min(UI_FONT_STEPS[UI_FONT_STEPS.length - 1], Math.max(UI_FONT_STEPS[0], Number(scale) || UI_FONT_DEFAULT));
+  document.documentElement.style.setProperty('--font-scale', next);
+  document.querySelectorAll('.font-size-label').forEach(el => {
+    el.textContent = `${Math.round(next * 100)}%`;
+  });
+}
+
+function getUiFontScale() {
+  return Number(localStorage.getItem(UI_FONT_KEY)) || UI_FONT_DEFAULT;
+}
+
+function changeUiFontSize(direction) {
+  const current = getUiFontScale();
+  const nearest = UI_FONT_STEPS.reduce((best, step, index) =>
+    Math.abs(step - current) < Math.abs(UI_FONT_STEPS[best] - current) ? index : best, 0);
+  const nextIndex = Math.min(UI_FONT_STEPS.length - 1, Math.max(0, nearest + direction));
+  const next = UI_FONT_STEPS[nextIndex];
+  localStorage.setItem(UI_FONT_KEY, next);
+  applyUiFontScale(next);
+}
+
+function resetUiFontSize() {
+  localStorage.removeItem(UI_FONT_KEY);
+  applyUiFontScale(UI_FONT_DEFAULT);
+}
 
 /* ── Multilingual helpers ──────────────────────────────────
    Menu items store name/desc as { lo, th, en, zh } objects.
@@ -27,6 +57,7 @@ const catIcons = { all:'🍽️ ', rice:'🍚 ', noodle:'🍜 ', grill:'🔥 ', 
 
 /* ── Init ─────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
+  applyUiFontScale(getUiFontScale());
   // 1. Language switcher — always mount in header
   i18n.buildSwitcher(document.getElementById('langMount'));
 

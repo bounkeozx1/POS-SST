@@ -33,17 +33,20 @@
   --radius-sm: 14px;
   --radius-xs: 8px;
   --tap:       48px;
+  --font-scale: 1.12;
+  --base-font-size: calc(16px * var(--font-scale));
+  --field-font-size: clamp(16px, var(--base-font-size), 22px);
 }
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{font-size:16px;-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+html{font-size:var(--base-font-size);-webkit-text-size-adjust:100%;scroll-behavior:smooth}
 body{
   font-family:'Noto Sans Lao','Noto Sans',sans-serif;
   background:var(--bg);color:var(--text);
   min-height:100vh;min-height:100dvh;
   overflow-x:hidden;-webkit-font-smoothing:antialiased;
 }
-input,select,textarea{font-family:inherit;font-size:16px!important}
+input,select,textarea{font-family:inherit;font-size:var(--field-font-size)!important}
 button{font-family:inherit;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 ::-webkit-scrollbar{width:2px;height:2px}
 ::-webkit-scrollbar-track{background:transparent}
@@ -81,6 +84,20 @@ button,.cat-pill,.add-btn,.ci-btn,.confirm-btn,.clear-btn,.nav-item,
 .store-table{font-size:.67rem;color:var(--muted);margin-top:1px;letter-spacing:.04em}
 .store-table span{color:var(--amber);font-weight:600}
 .header-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+
+.font-controls{
+  display:flex;align-items:center;gap:4px;
+  background:var(--card);border:1.5px solid var(--border2);
+  border-radius:100px;padding:4px;
+}
+.font-btn{
+  min-width:32px;height:30px;border:none;border-radius:100px;
+  background:transparent;color:var(--text2);
+  font-size:.76rem;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+}
+.font-btn:active{background:var(--card3);color:var(--amber2)}
+.font-size-label{min-width:42px;color:var(--amber2);font-size:.68rem}
 
 .order-status-pill{
   display:flex;align-items:center;gap:6px;
@@ -163,7 +180,7 @@ button,.cat-pill,.add-btn,.ci-btn,.confirm-btn,.clear-btn,.nav-item,
 .search-icon{font-size:.9rem;flex-shrink:0;opacity:.45}
 .search-bar input{
   flex:1;background:none;border:none;outline:none;
-  color:var(--text);font-size:16px;min-height:24px;
+  color:var(--text);font-size:var(--field-font-size);min-height:24px;
 }
 .search-bar input::placeholder{color:var(--muted)}
 .search-clear{
@@ -719,6 +736,10 @@ button,.cat-pill,.add-btn,.ci-btn,.confirm-btn,.clear-btn,.nav-item,
 @media(min-width:480px){
   .menu-grid{grid-template-columns:repeat(3,1fr);gap:14px}
   .menu-emoji{font-size:3.8rem}
+}
+@media(max-width:420px){
+  .font-size-label{display:none}
+  .font-btn{min-width:30px}
 }
 @media(min-width:640px){
   .menu-grid{grid-template-columns:repeat(3,1fr)}

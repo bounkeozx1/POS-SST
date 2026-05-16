@@ -41,6 +41,9 @@
   --tap:         44px;
   --shadow:      0 4px 20px rgba(0,0,0,0.5);
   --shadow-lg:   0 16px 52px rgba(0,0,0,0.7);
+  --font-scale:  1.1;
+  --base-font-size: calc(16px * var(--font-scale));
+  --field-font-size: clamp(16px, var(--base-font-size), 22px);
   /* Aliases matching index.html var names used in shared components */
   --accent:      #f5a623;
   --accent2:     #ffcb6b;
@@ -52,14 +55,14 @@
 
 /* ── Reset ── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{font-size:16px;scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+html{font-size:var(--base-font-size);scroll-behavior:smooth;-webkit-text-size-adjust:100%}
 body{
   font-family:'Noto Sans Lao','Noto Sans',sans-serif;
   background:var(--bg);color:var(--text);
   min-height:100vh;min-height:100dvh;
   overflow-x:hidden;-webkit-font-smoothing:antialiased;
 }
-input,select,textarea{font-family:inherit;font-size:16px!important}
+input,select,textarea{font-family:inherit;font-size:var(--field-font-size)!important}
 button{font-family:inherit;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 ::-webkit-scrollbar{width:3px;height:3px}
 ::-webkit-scrollbar-track{background:transparent}
@@ -81,6 +84,9 @@ button{font-family:inherit;cursor:pointer;touch-action:manipulation;-webkit-tap-
 /* Lang switcher in top-right of login screen */
 .login-lang-wrap{
   position:fixed;top:20px;right:20px;z-index:1001;
+}
+.login-font-wrap{
+  position:fixed;top:66px;right:20px;z-index:1001;
 }
 
 .login-card{
@@ -110,7 +116,7 @@ button{font-family:inherit;cursor:pointer;touch-action:manipulation;-webkit-tap-
 .lf-group input{
   width:100%;background:var(--card2);border:1.5px solid var(--border2);
   border-radius:12px;padding:12px 14px;color:var(--text);
-  font-size:16px;outline:none;min-height:var(--tap);
+  font-size:var(--field-font-size);outline:none;min-height:var(--tap);
   transition:border-color .2s,box-shadow .2s;
 }
 .lf-group input:focus{border-color:var(--amber);box-shadow:0 0 0 3px rgba(245,166,35,.1)}
@@ -271,6 +277,19 @@ button{font-family:inherit;cursor:pointer;touch-action:manipulation;-webkit-tap-
 .tb-bc-title{font-size:.95rem;font-weight:700;color:var(--text)}
 
 .tb-right{display:flex;align-items:center;gap:10px}
+.font-controls{
+  display:flex;align-items:center;gap:4px;
+  background:var(--card);border:1.5px solid var(--border2);
+  border-radius:100px;padding:4px;
+}
+.font-btn{
+  min-width:32px;height:30px;border:none;border-radius:100px;
+  background:transparent;color:var(--text2);
+  font-size:.76rem;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+}
+.font-btn:active{background:var(--card3);color:var(--amber2)}
+.font-size-label{min-width:42px;color:var(--amber2);font-size:.68rem}
 .tb-icon-btn{
   width:36px;height:36px;border-radius:10px;
   background:var(--card2);border:1px solid var(--border);
@@ -432,13 +451,13 @@ canvas{display:block;width:100%!important;height:200px!important;touch-action:ma
 .filter-search:focus-within{border-color:var(--amber);box-shadow:0 0 0 3px rgba(245,166,35,.08)}
 .filter-search input{
   flex:1;background:none;border:none;outline:none;
-  color:var(--text);font-size:16px;min-height:28px;
+  color:var(--text);font-size:var(--field-font-size);min-height:28px;
 }
 .filter-search input::placeholder{color:var(--muted)}
 .filter-select{
   background:var(--card);border:1.5px solid var(--border2);
   border-radius:var(--radius-sm);padding:8px 12px;color:var(--text);
-  font-family:inherit;font-size:16px;outline:none;cursor:pointer;
+  font-family:inherit;font-size:var(--field-font-size);outline:none;cursor:pointer;
   min-height:var(--tap);transition:border-color .2s;
 }
 .filter-select:focus{border-color:var(--amber)}
@@ -487,7 +506,7 @@ canvas{display:block;width:100%!important;height:200px!important;touch-action:ma
 .sg-input{
   width:100%;background:var(--card2);border:1.5px solid var(--border2);
   border-radius:var(--radius-sm);padding:10px 12px;color:var(--text);
-  font-size:16px;outline:none;min-height:var(--tap);transition:border-color .2s,box-shadow .2s;
+  font-size:var(--field-font-size);outline:none;min-height:var(--tap);transition:border-color .2s,box-shadow .2s;
 }
 .sg-input:focus{border-color:var(--amber);box-shadow:0 0 0 3px rgba(245,166,35,.08)}
 .sg-btn{
@@ -541,7 +560,7 @@ canvas{display:block;width:100%!important;height:200px!important;touch-action:ma
 .mf-input{
   background:var(--card2);border:1.5px solid var(--border2);
   border-radius:var(--radius-sm);padding:10px 12px;color:var(--text);
-  font-size:16px;outline:none;min-height:var(--tap);width:100%;
+  font-size:var(--field-font-size);outline:none;min-height:var(--tap);width:100%;
   transition:border-color .2s,box-shadow .2s;font-family:inherit;
 }
 .mf-input:focus{border-color:var(--amber);box-shadow:0 0 0 3px rgba(245,166,35,.08)}
@@ -683,6 +702,8 @@ canvas{display:block;width:100%!important;height:200px!important;touch-action:ma
 }
 @media(max-width:420px){
   .page-content{padding:12px}
+  .font-size-label{display:none}
+  .font-btn{min-width:30px}
   .kpi-val{font-size:1.15rem}
   .kpi-grid{gap:8px}
   .mf-row2{grid-template-columns:1fr}
