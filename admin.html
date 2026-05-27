@@ -30,6 +30,11 @@
         <button class="font-btn" type="button" onclick="changeUiFontSize(1)" title="เพิ่มขนาดตัวอักษร">A+</button>
       </div>
     </div>
+    <div class="login-theme-wrap">
+      <button class="theme-toggle" type="button" onclick="toggleThemeMode()" aria-label="Toggle light and dark mode">
+        <span class="theme-toggle-text">Dark</span>
+      </button>
+    </div>
     <div class="login-card">
       <div class="login-logo">
         <div class="login-logo-icon">⚡</div>
@@ -128,6 +133,9 @@
         </div>
         <div class="tb-right">
           <button class="tb-icon-btn" onclick="refreshPage()" data-i18n-title="tooltip.refresh">🔄</button>
+          <button class="theme-toggle" type="button" onclick="toggleThemeMode()" aria-label="Toggle light and dark mode">
+            <span class="theme-toggle-text">Dark</span>
+          </button>
           <div class="font-controls" aria-label="ปรับขนาดตัวอักษร">
             <button class="font-btn" type="button" onclick="changeUiFontSize(-1)" title="ลดขนาดตัวอักษร">A-</button>
             <button class="font-btn font-size-label" type="button" onclick="resetUiFontSize()" title="รีเซ็ตขนาดตัวอักษร">110%</button>

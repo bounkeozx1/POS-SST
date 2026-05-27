@@ -9,6 +9,29 @@
 const UI_FONT_KEY = 'pos-sst-font-scale';
 const UI_FONT_STEPS = [1, 1.1, 1.22, 1.34, 1.48];
 const UI_FONT_DEFAULT = 1.1;
+const UI_THEME_KEY = 'pos-sst-theme-mode';
+const UI_THEME_DEFAULT = 'dark';
+
+function getThemeMode() {
+  return localStorage.getItem(UI_THEME_KEY) === 'light' ? 'light' : UI_THEME_DEFAULT;
+}
+
+function applyThemeMode(mode) {
+  const next = mode === 'light' ? 'light' : 'dark';
+  document.body.classList.toggle('theme-light', next === 'light');
+  document.body.classList.toggle('theme-dark', next === 'dark');
+  document.querySelectorAll('.theme-toggle-text').forEach(el => {
+    el.textContent = next === 'light' ? 'Light' : 'Dark';
+  });
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', next === 'light' ? '#f7f3ec' : '#0c0c10');
+}
+
+function toggleThemeMode() {
+  const next = getThemeMode() === 'light' ? 'dark' : 'light';
+  localStorage.setItem(UI_THEME_KEY, next);
+  applyThemeMode(next);
+  redrawActivePage();
+}
 
 function applyUiFontScale(scale) {
   const next = Math.min(UI_FONT_STEPS[UI_FONT_STEPS.length - 1], Math.max(UI_FONT_STEPS[0], Number(scale) || UI_FONT_DEFAULT));
@@ -148,6 +171,7 @@ function generateSampleOrders() {
 // 2. AUTH
 // ════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
+  applyThemeMode(getThemeMode());
   applyUiFontScale(getUiFontScale());
   const loginLangMount = document.getElementById('loginLangMount');
   if (loginLangMount) i18n.buildSwitcher(loginLangMount);
